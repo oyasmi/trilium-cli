@@ -46,15 +46,11 @@ Use --new "" to delete text, and --old-file/--new-file for long snippets.`,
 				return err
 			}
 			count := 0
-			before, after, err := rewrite(cmd.Context(), c, t.ID, func(_ *etapi.Note, old []byte) ([]byte, [][]byte, error) {
+			before, after, err := rewrite(cmd.Context(), c, t.ID, func(_ *etapi.Note, old []byte) ([]byte, func([]byte) bool, error) {
 				out, n, err := applyReplacements(t.ID, old, reps, all)
 				count = n
-				var check [][]byte
-				for _, r := range reps {
-					check = append(check, r.new)
-				}
-				return out, check, err
-			})
+				return out, nil, err
+			}, false)
 			if err != nil {
 				return err
 			}

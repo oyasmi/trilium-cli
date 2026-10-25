@@ -1,0 +1,19 @@
+$ trilium edit chain1 --old A --new B --old B --new C
+edited chain1 2 replacements: 1 → 1 bytes
+
+$ trilium get chain1 -c
+C%(no newline)
+
+$ trilium edit chain1 --old C --new ''
+edited chain1 1 replacement: 1 → 0 bytes
+
+$ trilium edit chain1 --old x1 --new x2
+stderr| error: chain1 was written, but another writer changed it right after; the result is unknown
+stderr| hint: check the note with: trilium get -c chain1
+exit: 1
+
+$ trilium edit chain1 --old y1 --new y2
+stderr| error: injected failure [INJECTED] (a write was already attempted, so the outcome is unknown)
+stderr| hint: check the note with: trilium get -c chain1
+exit: 1
+

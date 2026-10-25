@@ -1,0 +1,31 @@
+$ trilium create Stable '<p>once</p>' -p projects1 --id stable01
+created stable01 text "Stable" in projects1
+
+$ trilium create 'Stable again' '<p>twice</p>' -p projects1 --id stable01
+stderr| error: note stable01 already exists ("Stable"); nothing was created
+stderr| hint: pick another ID, or change the existing note with: trilium put / update stable01
+exit: 1
+
+$ trilium get stable01
+---
+id: stable01
+title: Stable
+type: text (text/html)
+parents: projects1
+children: 0
+attachments: 0
+created: 2026-10-25 16:00
+modified: 2026-10-25 16:00
+---
+<p>once</p>
+
+$ trilium create Sys -p projects1 --id _mine1
+stderr| error: _mine1 is a Trilium system note
+stderr| hint: add --force if you really mean to change it
+exit: 2
+
+$ trilium create 'In hidden' -p _hidden
+stderr| error: _hidden is a Trilium system note
+stderr| hint: add --force if you really mean to change Trilium's internal notes
+exit: 2
+

@@ -66,5 +66,5 @@ The query language also has them, after an expression:
 
     trilium search '#status=todo' --in <project>
     trilium search 'note.title *=* "q3-report"'
-    trilium search '#agent=claude-1' --sort dateModified --desc -n 5
+    trilium search '#agent="claude-1"' --sort dateModified --desc -n 5
     trilium search 'note.type = code note.mime = "text/x-python"'

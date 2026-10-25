@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"math/rand/v2"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -24,14 +25,24 @@ type contentResult struct {
 
 const maxRetries = 3
 
-// change computes new content from the current one. It also returns the
-// pieces that must be present after writing; when one is missing, another
-// writer overwrote us and the change is redone.
-type change func(n *etapi.Note, old []byte) (updated []byte, mustContain [][]byte, err error)
+// change computes new content from the current one. It also returns kept,
+// which tells whether stored content that differs from what was written
+// still contains this change (another writer changed the note right after
+// us); nil means only the exact bytes count.
+type change func(n *etapi.Note, old []byte) (updated []byte, kept func(stored []byte) bool, err error)
 
 // rewrite applies fn to a note's content with optimistic concurrency: the
-// blobId is compared right before writing and the result is read back.
-func rewrite(ctx context.Context, c *etapi.Client, id string, fn change) (before, after int, err error) {
+// blobId is compared right before writing and the stored content is read
+// back afterwards. ETAPI has no conditional write, so this narrows the
+// window for lost updates but can't close it: two writers can both pass the
+// check and the later write wins without either of them noticing.
+//
+// With redo set (append), a write whose change was overwritten is redone.
+// Without it (edit), that case is reported as an unknown outcome instead,
+// because the edit may no longer apply to the newer content.
+func rewrite(ctx context.Context, c *etapi.Client, id string, fn change, redo bool) (before, after int, err error) {
+	wrote := false
+	verify := "check the note with: trilium get -c " + id
 	for attempt := 0; attempt <= maxRetries; attempt++ {
 		if attempt > 0 {
 			// Random backoff so that concurrent writers fall out of step.
@@ -43,47 +54,56 @@ func rewrite(ctx context.Context, c *etapi.Client, id string, fn change) (before
 		}
 		n, err := c.GetNote(ctx, id)
 		if err != nil {
-			return 0, 0, err
+			return 0, 0, afterWrite(err, wrote, verify)
 		}
 		if isBinaryNote(n) {
 			return 0, 0, output.Fail("replace it with: trilium put "+id+" -f <file>", "%s has binary content (%s) and can't be edited as text", id, n.Mime)
 		}
 		old, err := c.GetContent(ctx, id)
 		if err != nil {
-			return 0, 0, err
+			return 0, 0, afterWrite(err, wrote, verify)
 		}
-		updated, check, err := fn(n, old)
+		updated, kept, err := fn(n, old)
 		if err != nil {
-			return 0, 0, err
+			return 0, 0, afterWrite(err, wrote, verify)
 		}
 		latest, err := c.GetNote(ctx, id)
 		if err != nil {
-			return 0, 0, err
+			return 0, 0, afterWrite(err, wrote, verify)
 		}
 		if latest.BlobID != n.BlobID {
 			continue
 		}
+		wrote = true
 		if err := c.PutContent(ctx, id, bytes.NewReader(updated), sendBinary(n.Type, n.Mime, updated)); err != nil {
-			return 0, 0, err
+			return 0, 0, afterWrite(err, true, verify)
 		}
 		stored, err := c.GetContent(ctx, id)
 		if err != nil {
-			return 0, 0, err
+			return 0, 0, output.Fail(verify, "%s was written, but reading it back failed: %v", id, err)
 		}
-		if containsAll(stored, check) {
+		if bytes.Equal(stored, updated) || (kept != nil && kept(stored)) {
 			return len(old), len(updated), nil
 		}
-	}
-	return 0, 0, output.Fail("", "note changed concurrently, please retry")
-}
-
-func containsAll(b []byte, pieces [][]byte) bool {
-	for _, p := range pieces {
-		if len(p) > 0 && !bytes.Contains(b, p) {
-			return false
+		if !redo {
+			return 0, 0, output.Fail(verify, "%s was written, but another writer changed it right after; the result is unknown", id)
 		}
 	}
-	return true
+	if wrote {
+		return 0, 0, output.Fail(verify, "%s kept changing while writing (another writer?); your change may be missing", id)
+	}
+	return 0, 0, output.Fail("", "note changed concurrently, please retry (nothing was changed)")
+}
+
+// afterWrite makes sure an error that follows a write doesn't read as if
+// nothing had happened.
+func afterWrite(err error, wrote bool, verify string) error {
+	if !wrote {
+		return err
+	}
+	msg, _, code := output.Describe(err)
+	msg = strings.Replace(msg, " (nothing was changed)", "", 1)
+	return &output.Error{Msg: msg + " (a write was already attempted, so the outcome is unknown)", Hint: verify, Exit: code}
 }
 
 func appendCmd(rt *Runtime) *cobra.Command {
@@ -115,13 +135,14 @@ newline is inserted when needed so that lines don't run together.`,
 				return err
 			}
 			warned := false
-			before, after, err := rewrite(cmd.Context(), c, t.ID, func(n *etapi.Note, old []byte) ([]byte, [][]byte, error) {
+			before, after, err := rewrite(cmd.Context(), c, t.ID, func(n *etapi.Note, old []byte) ([]byte, func([]byte) bool, error) {
 				if !warned {
 					rt.warnNoTags(n.Type, piece)
 					warned = true
 				}
-				return joinContent(n.Type, old, piece, top), [][]byte{piece}, nil
-			})
+				kept := func(stored []byte) bool { return len(piece) == 0 || bytes.Contains(stored, piece) }
+				return joinContent(n.Type, old, piece, top), kept, nil
+			}, true)
 			if err != nil {
 				return err
 			}

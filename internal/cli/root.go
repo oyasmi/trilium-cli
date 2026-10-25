@@ -147,8 +147,8 @@ func NewRoot(rt *Runtime) *cobra.Command {
 
 	root.AddCommand(
 		searchCmd(rt), lsCmd(rt), getCmd(rt), createCmd(rt), appendCmd(rt), editCmd(rt), putCmd(rt), rmCmd(rt),
-		updateCmd(rt), attrCmd(rt), mvCmd(rt), branchCmd(rt), attCmd(rt), revCmd(rt),
-		historyCmd(rt), exportCmd(rt), importCmd(rt), undeleteCmd(rt), infoCmd(rt), backupCmd(rt), versionCmd(rt),
+		updateCmd(rt), attrCmd(rt), addForce(mvCmd(rt)), branchCmd(rt), attCmd(rt), revCmd(rt),
+		historyCmd(rt), exportCmd(rt), addForce(importCmd(rt)), undeleteCmd(rt), infoCmd(rt), backupCmd(rt), versionCmd(rt),
 	)
 	setHelp(root, rt)
 	return root

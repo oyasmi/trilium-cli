@@ -93,8 +93,11 @@ notes). Binary content is never printed; save it with -o FILE.
 func fetchNotes(ctx context.Context, c *etapi.Client, ts []target, o getOpts) []getResult {
 	results := make([]getResult, len(ts))
 	var wg sync.WaitGroup
+	sem := make(chan struct{}, maxParallel)
 	for i, t := range ts {
 		wg.Go(func() {
+			sem <- struct{}{}
+			defer func() { <-sem }()
 			r := &results[i]
 			var inner sync.WaitGroup
 			var attErr error

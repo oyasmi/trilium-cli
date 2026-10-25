@@ -22,16 +22,39 @@ a positional argument (short text), `-f FILE` (long text, all binary data),
 
 **Output**: list rows are tab-separated with the ID first; write commands print
 one result line; errors go to stderr as `error: …` plus an optional `hint: …`.
-Empty results print `no matches` to stderr with exit code 0.
-`--json` (any command) prints JSON Lines with ETAPI field names; errors become
+Empty results print `no matches` to stderr with exit code 0. Tabs, newlines
+and other control characters in titles, prefixes and attribute values are
+printed escaped (`\t`, `\n`, `\xNN`), so every row is one line; the stored
+data is unchanged.
+`--json` prints JSON Lines with ETAPI field names: entities as stored after
+the change, content changes as `{"noteId","bytesBefore","bytesAfter"}`, saved
+files (`-o FILE`) as `{"…Id","file","bytes"}`. Exceptions: `-o -` and `att get`
+without `-o` print raw bytes. Errors become
 `{"error":{"status","code","message"},"hint"}` on stderr.
+
+**Errors after a change**: an error does not always mean nothing happened.
+Messages say so when it matters: `… the result is unknown` / `your change may
+be missing` (check with `get -c`), `the N operation(s) printed above were
+applied` (`attr`), `created <id> but …` (two-step uploads), `… the note now
+has both` (relation replacement).
 
 **Exit codes**: 0 success (also empty results) · 1 API/network error or failed
 operation (e.g. `edit` found no match) · 2 usage or configuration error ·
 3 not found (`*_NOT_FOUND`).
 
-**System notes**: `rm`, `mv`, `branch rm` refuse `root` and IDs starting with
-`_`; `put`, `append`, `edit`, `update`, `attr` need `--force` for `_` notes.
+**System notes** (`root` and IDs starting with `_`):
+
+| Command | Refused | Needs `--force` |
+|---|---|---|
+| `rm`, `mv` (the moved note), `branch rm` | always | — |
+| `put`, `append`, `edit`, `update`, `attr` | — | note is `_…` |
+| `create` | — | `-p` or `--id` is `_…` |
+| `mv` | — | new parent is `_…` |
+| `branch add`, `branch set` | cloning `root` | note or parent is `_…` |
+| `att add/put/update/rm` | — | owner note is `_…` |
+| `import` | — | parent is `_…` |
+
+Reading is never restricted.
 
 ## Everyday
 
@@ -79,7 +102,8 @@ show `content: binary (image/png), save with: trilium get <id> -o <file>` and
 ### create `<title> [content]`
 `-p <note>` (default `@inbox`) · `-t TYPE` (default text; also code, mermaid,
 book, search, file, image, canvas, …) · `--mime M` · `-f FILE` · `-a ATTR`
-(repeatable) · `--id ID` (fails if it exists: safe retries) · `--pos N`.
+(repeatable) · `--id ID` (refused when that ID exists, so retries never
+overwrite) · `--pos N` · `--force` (parent or `--id` is a system note).
 With `-f`, type/mime/title come from the file (`.html` → text, `.md`/`.py`/…
 → code, `.mmd` → mermaid, images → image, else file); flags win. `-t code`
 without `--mime` uses the title's extension. `-t search` stores the content as
@@ -91,9 +115,11 @@ created tA1b2C3d text "Meeting notes" in e2GMUhHk0e9v (@inbox)
 ### append `<note> [content]`
 `-f FILE` · `--top` (prepend) · `--force`. Text (HTML) notes are joined byte
 for byte. Other notes get a `\n` between old and new content when needed.
-Retries when another writer changes the note at the same time.
+Detects most concurrent changes and redoes the append; ETAPI has no
+conditional write, so a lost update is still possible (one writer per note).
 ```
 appended tA1b2C3d +36 bytes: 2431 → 2467 bytes
+error: tA1b2C3d kept changing while writing (another writer?); your change may be missing
 ```
 
 ### edit `<note> --old S --new S [--old S --new S]...`
@@ -104,7 +130,9 @@ content (HTML for text notes). All pairs succeed or nothing is written. Each
 edited tA1b2C3d 2 replacements: 2431 → 2467 bytes
 error: --old #1 not found in tA1b2C3d (nothing was changed)        (exit 1)
 error: --old #1 matches 3 times in tA1b2C3d (nothing was changed)  (exit 1)
+error: tA1b2C3d was written, but another writer changed it right after; the result is unknown
 ```
+Pairs apply in order, so `--old A --new B --old B --new C` turns A into C.
 
 ### put `<note> [content]`
 `-f FILE` · `--force`. Replaces the whole content; no automatic revision (run
@@ -115,7 +143,8 @@ updated tA1b2C3d content: 2431 → 2467 bytes      (? → N for binary notes)
 
 ### rm `<note...>`
 `-r` needed when a note has children. Deletes the note **everywhere it appears
-and its whole subtree**. Restorable with `undelete`.
+and the notes below it** (a descendant cloned elsewhere survives there).
+Restorable with `undelete`.
 ```
 deleted tA1b2C3d "Title" (+3 children; undo: trilium undelete tA1b2C3d)
 deleted tA1b2C3d "Title" (undo: …) (was in 2 places; to remove one placement use: trilium branch rm)
@@ -138,9 +167,13 @@ No ops: list own attributes (`--all` adds inherited). `--force` for `_` notes.
 Ops (quote them): `#name=value` set (changes the first existing one), `#name`
 set with empty value, `+#name=value` add another, `-#name` remove all,
 `-#name=value` remove that one, `~name=<note>` set relation (`+~`, `-~` too),
-`#name(inheritable)=value`. Values with spaces: `'#title="a b"'` (`\"`, `\\`
-escapes). Names: letters, digits, `_`, `:` only. All ops are validated before
-any change. Output per op: `set #status=done on <id>`, `added …`, `removed …`.
+`#name(inheritable)=value`. Values with spaces: `'#title="a b"'` (escapes
+`\"` `\\` `\n` `\t` `\r`). Names: letters, digits, `_`, `:` only. All ops are
+parsed, and relation targets checked to exist, before any change; ops then
+run in order, so a later failure leaves earlier ones applied (the error says
+how many). Replacing a relation or changing inheritability creates the new
+attribute before deleting the old one. Output per op: `set #status=done on
+<id>`, `added …`, `removed …`.
 
 ### mv `<note> <new-parent>`
 `--from <old-parent>` (required for cloned notes) · `--pos N`. Creates the new

@@ -108,3 +108,61 @@ func TestRevisions(t *testing.T) {
 	s.run("--json", "rev", "get", "r0006", "--text")
 	s.golden("rev")
 }
+
+func TestAttrFailureKeepsOldValue(t *testing.T) {
+	s := newSession(t)
+	_, meeting, script := seed(s)
+	// Missing target: checked before anything is written (F2).
+	s.run("attr", meeting, "#status=done", "~seeAlso=doesNotExist1")
+	s.run("attr", meeting)
+	// Creating the replacement fails: the old relation stays.
+	s.srv.Fail = "POST /etapi/attributes"
+	s.run("attr", meeting, "~seeAlso=root")
+	s.srv.Fail = ""
+	s.run("attr", meeting)
+	// Removing the old one fails: both are reported.
+	s.srv.Fail = "DELETE /etapi/attributes"
+	s.run("attr", meeting, "~seeAlso=root")
+	s.srv.Fail = ""
+	s.run("attr", meeting)
+	// A later op fails after earlier ones were applied.
+	s.srv.Fail = "PATCH /etapi/attributes"
+	s.run("attr", script, "#new=1", "#new=2")
+	s.srv.Fail = ""
+	s.run("create", "Rel", "-p", "projects1", "-a", "~x=doesNotExist1")
+	s.golden("attr-failures")
+}
+
+func TestControlCharsAndJSON(t *testing.T) {
+	s := newSession(t)
+	projects, meeting, _ := seed(s)
+	odd := s.srv.Add("odd1", projects, "Tab\tTitle\nSecond line", "text", "text/html", "")
+	s.srv.AddAttr(odd, "label", "note", "line1\nline2", false)
+	s.run("ls", projects)
+	s.run("get", odd, "-m")
+	s.run("attr", odd)
+	s.run("--json", "ls", projects, "-n", "1")
+	png := s.file("p.png", []byte("\x89PNG\r\n\x1a\nxxxxxxxx"))
+	s.run("--json", "att", "add", meeting, "-f", png)
+	s.run("rev", "add", meeting)
+	s.run("--json", "rev", "get", "r0008", "-o", "rev.html")
+	s.golden("control-json")
+}
+
+func TestSystemNoteGuards(t *testing.T) {
+	s := newSession(t)
+	_, meeting, script := seed(s)
+	att := s.srv.AddAttachment("_options", "file", "text/plain", "x.txt", []byte("x"))
+	s.run("mv", script, "_hidden")
+	s.run("branch", "add", script, "_hidden")
+	s.run("branch", "add", "_options", meeting)
+	s.run("branch", "set", "_options", "_hidden", "--pos", "5")
+	s.run("att", "add", "_options", "x", "--title", "a.txt")
+	s.run("att", "put", att, "y")
+	s.run("att", "update", att, "--title", "b.txt")
+	s.run("att", "rm", att)
+	s.run("import", "_hidden", s.file("a.md", []byte("# a")))
+	s.run("branch", "add", script, "_hidden", "--force")
+	s.run("att", "rm", att, "--force")
+	s.golden("guards")
+}

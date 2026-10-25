@@ -1,0 +1,177 @@
+[
+  {
+    "args": [
+      "--json",
+      "create",
+      "Extra audit 1dfa2990",
+      "-p",
+      "root",
+      "-t",
+      "book"
+    ],
+    "exit": 0,
+    "stdout": "{\"noteId\":\"1TqRlZVpsuOR\",\"isProtected\":false,\"title\":\"Extra audit 1dfa2990\",\"type\":\"book\",\"mime\":\"\",\"blobId\":\"z4PhNX7vuL3xVChQ1m2A\",\"dateCreated\":\"2026-10-25 11:01:34.300+0000\",\"dateModified\":\"2026-10-25 11:01:34.301+0000\",\"utcDateCreated\":\"2026-10-25 11:01:34.300Z\",\"utcDateModified\":\"2026-10-25 11:01:34.301Z\",\"parentNoteIds\":[\"root\"],\"childNoteIds\":[],\"parentBranchIds\":[\"root_1TqRlZVpsuOR\"],\"childBranchIds\":[],\"attributes\":[{\"attributeId\":\"khNOATppZOvG\",\"noteId\":\"1TqRlZVpsuOR\",\"type\":\"label\",\"name\":\"agent\",\"value\":\"codex-audit\",\"position\":10,\"isInheritable\":false,\"utcDateModified\":\"2026-10-25 11:01:34.456Z\"}]}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "--json",
+      "create",
+      "Stdin",
+      "-p",
+      "1TqRlZVpsuOR",
+      "-f",
+      "-"
+    ],
+    "exit": 0,
+    "stdout": "{\"noteId\":\"KgpAwRO1rzmu\",\"isProtected\":false,\"title\":\"Stdin\",\"type\":\"text\",\"mime\":\"text/html\",\"blobId\":\"xdeV4bJWWVAxoXHfASkf\",\"dateCreated\":\"2026-10-25 11:01:34.785+0000\",\"dateModified\":\"2026-10-25 11:01:34.786+0000\",\"utcDateCreated\":\"2026-10-25 11:01:34.785Z\",\"utcDateModified\":\"2026-10-25 11:01:34.787Z\",\"parentNoteIds\":[\"1TqRlZVpsuOR\"],\"childNoteIds\":[],\"parentBranchIds\":[\"1TqRlZVpsuOR_KgpAwRO1rzmu\"],\"childBranchIds\":[],\"attributes\":[{\"attributeId\":\"K56M6LOoGDGS\",\"noteId\":\"KgpAwRO1rzmu\",\"type\":\"label\",\"name\":\"agent\",\"value\":\"codex-audit\",\"position\":10,\"isInheritable\":false,\"utcDateModified\":\"2026-10-25 11:01:34.950Z\"}]}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "get",
+      "KgpAwRO1rzmu",
+      "-c"
+    ],
+    "exit": 0,
+    "stdout": "<p>stdin 中文</p>\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "search",
+      "#agent=codex-audit",
+      "--in",
+      "1TqRlZVpsuOR"
+    ],
+    "exit": 1,
+    "stdout": "",
+    "stderr": "error: Cannot read properties of undefined (reading 'noteId') [GENERIC]\n"
+  },
+  {
+    "args": [
+      "search",
+      "#agent=\"codex-audit\"",
+      "--in",
+      "1TqRlZVpsuOR"
+    ],
+    "exit": 1,
+    "stdout": "",
+    "stderr": "error: Cannot read properties of undefined (reading 'noteId') [GENERIC]\n"
+  },
+  {
+    "args": [
+      "rev",
+      "add",
+      "KgpAwRO1rzmu"
+    ],
+    "exit": 0,
+    "stdout": "created revision WhgtbJ11YTpi of KgpAwRO1rzmu\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "--json",
+      "rev",
+      "ls",
+      "KgpAwRO1rzmu"
+    ],
+    "exit": 0,
+    "stdout": "{\"revisionId\":\"WhgtbJ11YTpi\",\"noteId\":\"KgpAwRO1rzmu\",\"type\":\"text\",\"mime\":\"text/html\",\"isProtected\":false,\"title\":\"Stdin\",\"blobId\":\"xdeV4bJWWVAxoXHfASkf\",\"dateLastEdited\":\"2026-10-25 11:01:34.786+0000\",\"dateCreated\":\"2026-10-25 11:01:36.401+0000\",\"utcDateLastEdited\":\"2026-10-25 11:01:34.787Z\",\"utcDateCreated\":\"2026-10-25 11:01:36.401Z\",\"utcDateModified\":\"2026-10-25 11:01:36.402Z\",\"contentLength\":16}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "--json",
+      "rev",
+      "get",
+      "WhgtbJ11YTpi",
+      "-o",
+      "/tmp/trilium-audit-20261025/revision.html"
+    ],
+    "exit": 0,
+    "stdout": "saved WhgtbJ11YTpi to /tmp/trilium-audit-20261025/revision.html (20 bytes)\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "--json",
+      "att",
+      "add",
+      "KgpAwRO1rzmu",
+      "-f",
+      "/tmp/trilium-audit-20261025/pixel.png"
+    ],
+    "exit": 0,
+    "stdout": "{\"attachmentId\":\"NbspDV5VnFJk\",\"ownerId\":\"KgpAwRO1rzmu\",\"role\":\"image\",\"mime\":\"image/png\",\"title\":\"pixel.png\",\"position\":10,\"blobId\":\"z4PhNX7vuL3xVChQ1m2A\",\"dateModified\":\"2026-10-25 11:01:37.718+0000\",\"utcDateModified\":\"2026-10-25 11:01:37.718Z\",\"contentLength\":0}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "--json",
+      "att",
+      "ls",
+      "KgpAwRO1rzmu"
+    ],
+    "exit": 0,
+    "stdout": "{\"attachmentId\":\"NbspDV5VnFJk\",\"ownerId\":\"KgpAwRO1rzmu\",\"role\":\"image\",\"mime\":\"image/png\",\"title\":\"pixel.png\",\"position\":10,\"blobId\":\"bY9ewZeH2IsLEuxlDV6J\",\"dateModified\":\"2026-10-25 11:01:37.871+0000\",\"utcDateModified\":\"2026-10-25 11:01:37.871Z\",\"contentLength\":68}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "--json",
+      "create",
+      "-f",
+      "/tmp/trilium-audit-20261025/pixel.png",
+      "-p",
+      "1TqRlZVpsuOR"
+    ],
+    "exit": 0,
+    "stdout": "{\"noteId\":\"RkIMQpurj2xO\",\"isProtected\":false,\"title\":\"pixel.png\",\"type\":\"image\",\"mime\":\"image/png\",\"blobId\":\"z4PhNX7vuL3xVChQ1m2A\",\"dateCreated\":\"2026-10-25 11:01:38.559+0000\",\"dateModified\":\"2026-10-25 11:01:38.560+0000\",\"utcDateCreated\":\"2026-10-25 11:01:38.559Z\",\"utcDateModified\":\"2026-10-25 11:01:38.560Z\",\"parentNoteIds\":[\"1TqRlZVpsuOR\"],\"childNoteIds\":[],\"parentBranchIds\":[\"1TqRlZVpsuOR_RkIMQpurj2xO\"],\"childBranchIds\":[],\"attributes\":[{\"attributeId\":\"WT86FkhtI5RL\",\"noteId\":\"RkIMQpurj2xO\",\"type\":\"label\",\"name\":\"agent\",\"value\":\"codex-audit\",\"position\":10,\"isInheritable\":false,\"utcDateModified\":\"2026-10-25 11:01:38.878Z\"}]}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "get",
+      "RkIMQpurj2xO",
+      "-o",
+      "/tmp/trilium-audit-20261025/pixel-out.png"
+    ],
+    "exit": 0,
+    "stdout": "saved RkIMQpurj2xO to /tmp/trilium-audit-20261025/pixel-out.png (68 bytes)\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "--json",
+      "create",
+      "-f",
+      "/tmp/trilium-audit-20261025/source.md",
+      "-p",
+      "1TqRlZVpsuOR"
+    ],
+    "exit": 0,
+    "stdout": "{\"noteId\":\"fokX7rXUvigx\",\"isProtected\":false,\"title\":\"source.md\",\"type\":\"code\",\"mime\":\"text/x-markdown\",\"blobId\":\"3LG9azMFBov04G0Qz7Zy\",\"dateCreated\":\"2026-10-25 11:01:39.693+0000\",\"dateModified\":\"2026-10-25 11:01:39.697+0000\",\"utcDateCreated\":\"2026-10-25 11:01:39.693Z\",\"utcDateModified\":\"2026-10-25 11:01:39.697Z\",\"parentNoteIds\":[\"1TqRlZVpsuOR\"],\"childNoteIds\":[],\"parentBranchIds\":[\"1TqRlZVpsuOR_fokX7rXUvigx\"],\"childBranchIds\":[],\"attributes\":[{\"attributeId\":\"RNkfFe7VFQEX\",\"noteId\":\"fokX7rXUvigx\",\"type\":\"label\",\"name\":\"agent\",\"value\":\"codex-audit\",\"position\":10,\"isInheritable\":false,\"utcDateModified\":\"2026-10-25 11:01:39.844Z\"}]}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "get",
+      "fokX7rXUvigx",
+      "-c"
+    ],
+    "exit": 0,
+    "stdout": "# Raw Markdown\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "rm",
+      "1TqRlZVpsuOR",
+      "-r"
+    ],
+    "exit": 0,
+    "stdout": "deleted 1TqRlZVpsuOR \"Extra audit 1dfa2990\" (+3 children; undo: trilium undelete 1TqRlZVpsuOR)\n",
+    "stderr": ""
+  }
+]

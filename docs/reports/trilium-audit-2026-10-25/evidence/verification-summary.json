@@ -1,0 +1,18 @@
+{
+  "mainRecordedCommands": 86,
+  "mainChecks": 26,
+  "passed": 21,
+  "failed": 5,
+  "extraCommands": 15,
+  "searchCommands": 8,
+  "finalRootChildCount": 1,
+  "finalRootChildrenSHA256": "1310cdd3a07cd5fb3565d769c652fe4d3e7b68777c4fe0f0fb741171089e4e33",
+  "goVet": "passed",
+  "goTestRace": "passed; real e2e gated off",
+  "golangciLint": "0 issues",
+  "productionInternalStatementCoveragePercent": 89.2,
+  "initialActiveNotes": 400,
+  "finalActiveNotes": 400,
+  "initialDeletedNotes": 217,
+  "finalDeletedNotes": 251
+}

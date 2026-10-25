@@ -65,7 +65,7 @@ Deleted notes that can be restored are marked; restore them with: trilium undele
 				if title == "" {
 					title = ch.CurrentTitle
 				}
-				f := []string{output.Time(ch.UTCDate, rt.Loc), ch.NoteID, title}
+				f := []string{output.Time(ch.UTCDate, rt.Loc), ch.NoteID, output.Clean(title)}
 				if ch.CurrentIsDeleted {
 					f = append(f, "deleted")
 					if ch.CanBeUndeleted {
@@ -178,6 +178,9 @@ not convert anything itself).`,
 			}
 			c, ts, err := rt.setup(cmd.Context(), args[0])
 			if err != nil {
+				return err
+			}
+			if err := guardPlace(ts[0].ID, forceFlag(cmd)); err != nil {
 				return err
 			}
 			ctx := cmd.Context()

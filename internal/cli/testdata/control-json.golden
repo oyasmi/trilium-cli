@@ -1,0 +1,35 @@
+$ trilium ls projects1
+meeting1	text	Meeting notes
+script1	code	Script.py
+old1	text	Old	(archived)
+odd1	text	Tab\tTitle\nSecond line
+
+$ trilium get odd1 -m
+---
+id: odd1
+title: Tab\tTitle\nSecond line
+type: text (text/html)
+parents: projects1
+attrs: #note="line1\nline2"
+children: 0
+attachments: 0
+created: 2026-10-25 16:00
+modified: 2026-10-25 16:00
+---
+
+$ trilium attr odd1
+a0006	#note="line1\nline2"
+
+$ trilium --json ls projects1 -n 1
+{"noteId":"meeting1","isProtected":false,"title":"Meeting notes","type":"text","mime":"text/html","blobId":"bdce3f9a189a2233f","utcDateCreated":"2026-10-25 08:00:08.000Z","utcDateModified":"2026-10-25 08:00:08.000Z","parentNoteIds":["projects1"],"childNoteIds":[],"parentBranchIds":["projects1_meeting1"],"childBranchIds":[],"attributes":[{"attributeId":"a0002","noteId":"meeting1","type":"label","name":"status","value":"draft","position":10,"isInheritable":false},{"attributeId":"a0003","noteId":"meeting1","type":"relation","name":"seeAlso","value":"script1","position":20,"isInheritable":false},{"attributeId":"a0001","noteId":"projects1","type":"label","name":"project","value":"etapi","position":10,"isInheritable":true}]}
+stderr| 1 shown; 3 more (use -n)
+
+$ trilium --json att add meeting1 -f '$DIR/p.png'
+{"attachmentId":"att0007","ownerId":"meeting1","role":"image","mime":"image/png","title":"p.png","position":10,"contentLength":16}
+
+$ trilium rev add meeting1
+created revision r0008 of meeting1
+
+$ trilium --json rev get r0008 -o rev.html
+{"bytes":68,"file":"rev.html","revisionId":"r0008"}
+

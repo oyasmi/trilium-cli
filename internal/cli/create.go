@@ -20,6 +20,7 @@ func createCmd(rt *Runtime) *cobra.Command {
 		parent, typ, mime, file, id string
 		attrs                       []string
 		pos                         int
+		force                       bool
 	)
 	cmd := &cobra.Command{
 		Use:   "create <title> [content]",
@@ -84,6 +85,24 @@ If TRILIUM_AGENT is set, the note gets #agent=<name>.`,
 				return err
 			}
 			p := ts[0]
+			if err := guardPlace(p.ID, force); err != nil {
+				return err
+			}
+			if id != "" {
+				if err := guardWrite(id, force); err != nil {
+					return err
+				}
+				// Trilium overwrites an existing note when create-note gets its
+				// ID, so check first. Another client could still create the ID
+				// between the check and the create; this is not a lock.
+				if err := ensureAbsent(cmd.Context(), c, id); err != nil {
+					return err
+				}
+			}
+			values, err := rt.resolveTargets(cmd.Context(), c, ops)
+			if err != nil {
+				return err
+			}
 			if !binary {
 				rt.warnNoTags(typ, body)
 			}
@@ -101,11 +120,18 @@ If TRILIUM_AGENT is set, the note gets #agent=<name>.`,
 				if err := c.PutContent(ctx, n.NoteID, bytes.NewReader(body), true); err != nil {
 					return output.Fail("the note exists but is empty; retry with: trilium put "+n.NoteID+" -f <file>", "created %s but uploading its content failed: %v", n.NoteID, err)
 				}
+				// Report the note as stored (blobId etc. changed with the upload).
+				stored, err := c.GetNote(ctx, n.NoteID)
+				if err != nil {
+					return err
+				}
+				n = stored
 			}
 			if typ == "search" && searchQuery != "" {
 				ops = append([]attrspec.Op{{Kind: attrspec.Add, Type: attrspec.Label, Name: "searchString", Value: searchQuery, HasValue: true}}, ops...)
+				values = append([]string{searchQuery}, values...)
 			}
-			created, err := rt.createAttrs(ctx, c, n.NoteID, ops)
+			created, err := createAttrs(ctx, c, n.NoteID, ops, values)
 			n.Attributes = append(n.Attributes, created...)
 			if err != nil {
 				return output.Fail("", "created %s, but adding attributes failed: %v", n.NoteID, err)
@@ -119,9 +145,23 @@ If TRILIUM_AGENT is set, the note gets #agent=<name>.`,
 	f.StringVar(&mime, "mime", "", "mime type (e.g. text/x-python for code notes)")
 	f.StringVarP(&file, "file", "f", "", "read content from FILE (- for stdin)")
 	f.StringArrayVarP(&attrs, "attr", "a", nil, "add an attribute, e.g. '#status=draft' (repeatable)")
-	f.StringVar(&id, "id", "", "use this note ID (fails if it exists)")
+	f.StringVar(&id, "id", "", "use this note ID (refused if a note with it exists)")
 	f.IntVar(&pos, "pos", 0, "position among siblings (10, 20, 30 …)")
+	f.BoolVar(&force, "force", false, "allow creating inside Trilium system notes")
 	return cmd
+}
+
+// ensureAbsent fails when a note with this ID already exists.
+func ensureAbsent(ctx context.Context, c *etapi.Client, id string) error {
+	n, err := c.GetNote(ctx, id)
+	switch {
+	case err == nil:
+		return output.Fail("pick another ID, or change the existing note with: trilium put / update "+id,
+			"note %s already exists (%s); nothing was created", id, output.Q(n.Title))
+	case isNotFound(err):
+		return nil
+	}
+	return err
 }
 
 // inferTypeMime applies the precedence: explicit flags, then what the file
@@ -166,19 +206,12 @@ func validateRelationTargets(ops []attrspec.Op) error {
 	return nil
 }
 
-// createAttrs adds attributes to a new note (set and add behave the same there).
-func (rt *Runtime) createAttrs(ctx context.Context, c *etapi.Client, noteID string, ops []attrspec.Op) ([]etapi.Attribute, error) {
+// createAttrs adds attributes to a new note (set and add behave the same
+// there). values holds the resolved value of each op.
+func createAttrs(ctx context.Context, c *etapi.Client, noteID string, ops []attrspec.Op, values []string) ([]etapi.Attribute, error) {
 	var out []etapi.Attribute
-	for _, op := range ops {
-		value := op.Value
-		if op.Type == attrspec.Relation {
-			t, err := rt.resolve(ctx, c, op.Value)
-			if err != nil {
-				return out, err
-			}
-			value = t.ID
-		}
-		a, err := c.CreateAttribute(ctx, etapi.AttributeCreate{NoteID: noteID, Type: op.Type, Name: op.Name, Value: value, IsInheritable: op.Inheritable})
+	for i, op := range ops {
+		a, err := c.CreateAttribute(ctx, etapi.AttributeCreate{NoteID: noteID, Type: op.Type, Name: op.Name, Value: values[i], IsInheritable: op.Inheritable})
 		if err != nil {
 			return out, err
 		}

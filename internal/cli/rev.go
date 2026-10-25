@@ -56,7 +56,7 @@ Trilium's contentLength (characters for text content).`,
 			}
 			newestFirst(revs)
 			for _, r := range revs {
-				line := strings.Join([]string{r.RevisionID, output.Time(r.UTCDateCreated, rt.Loc), strconv.Itoa(r.ContentLength), r.Title}, "\t")
+				line := strings.Join([]string{r.RevisionID, output.Time(r.UTCDateCreated, rt.Loc), strconv.Itoa(r.ContentLength), output.Clean(r.Title)}, "\t")
 				if err := rt.emit(r, line); err != nil {
 					return err
 				}
@@ -114,10 +114,11 @@ func revGetCmd(rt *Runtime) *cobra.Command {
 				if err := rt.writeOut(out, data); err != nil {
 					return err
 				}
-				if out != "-" {
-					rt.printf("saved %s to %s (%d bytes)\n", id, out, len(data))
+				if out == "-" {
+					return nil
 				}
-				return nil
+				return rt.emit(map[string]any{"revisionId": id, "file": out, "bytes": len(data)},
+					fmt.Sprintf("saved %s to %s (%d bytes)", id, out, len(data)))
 			}
 			notice := ""
 			if text && r.Type == content.TypeText {

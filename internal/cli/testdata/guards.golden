@@ -1,0 +1,51 @@
+$ trilium mv script1 _hidden
+stderr| error: _hidden is a Trilium system note
+stderr| hint: add --force if you really mean to change Trilium's internal notes
+exit: 2
+
+$ trilium branch add script1 _hidden
+stderr| error: _hidden is a Trilium system note
+stderr| hint: add --force if you really mean to change Trilium's internal notes
+exit: 2
+
+$ trilium branch add _options meeting1
+stderr| error: _options is a Trilium system note
+stderr| hint: add --force if you really mean to change Trilium's internal notes
+exit: 2
+
+$ trilium branch set _options _hidden --pos 5
+stderr| error: _options is a Trilium system note
+stderr| hint: add --force if you really mean to change Trilium's internal notes
+exit: 2
+
+$ trilium att add _options x --title a.txt
+stderr| error: _options is a Trilium system note
+stderr| hint: add --force if you really mean to change Trilium's internal notes
+exit: 2
+
+$ trilium att put att0006 y
+stderr| error: _options is a Trilium system note
+stderr| hint: add --force if you really mean to change Trilium's internal notes
+exit: 2
+
+$ trilium att update att0006 --title b.txt
+stderr| error: _options is a Trilium system note
+stderr| hint: add --force if you really mean to change Trilium's internal notes
+exit: 2
+
+$ trilium att rm att0006
+stderr| error: _options is a Trilium system note
+stderr| hint: add --force if you really mean to change Trilium's internal notes
+exit: 2
+
+$ trilium import _hidden '$DIR/a.md'
+stderr| error: _hidden is a Trilium system note
+stderr| hint: add --force if you really mean to change Trilium's internal notes
+exit: 2
+
+$ trilium branch add script1 _hidden --force
+cloned script1 into _hidden (branch _hidden_script1)
+
+$ trilium att rm att0006 --force
+deleted attachment att0006 "x.txt" from _options
+

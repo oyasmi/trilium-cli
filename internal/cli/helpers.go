@@ -15,6 +15,9 @@ import (
 	"github.com/oyasmi/trilium-cli/internal/ref"
 )
 
+// maxParallel caps concurrent requests made by one command.
+const maxParallel = 8
+
 // target is a resolved note reference.
 type target struct {
 	ID    string
@@ -213,4 +216,24 @@ func plural(n int, one, many string) string {
 		return fmt.Sprintf("%d %s", n, one)
 	}
 	return fmt.Sprintf("%d %s", n, many)
+}
+
+// guardPlace refuses to put notes, clones or attachments inside a Trilium
+// system note (IDs starting with "_") without --force.
+func guardPlace(id string, force bool) error {
+	if output.IsSystemID(id) && !force {
+		return output.Usage("add --force if you really mean to change Trilium's internal notes", "%s is a Trilium system note", id)
+	}
+	return nil
+}
+
+// addForce adds the --force flag used with guardPlace.
+func addForce(cmd *cobra.Command) *cobra.Command {
+	cmd.Flags().Bool("force", false, "allow changing Trilium system notes (IDs starting with _)")
+	return cmd
+}
+
+func forceFlag(cmd *cobra.Command) bool {
+	f, _ := cmd.Flags().GetBool("force")
+	return f
 }

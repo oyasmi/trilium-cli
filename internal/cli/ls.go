@@ -155,7 +155,7 @@ func fetchMissing(ctx context.Context, c *etapi.Client, byID map[string]*etapi.N
 		mu       sync.Mutex
 		firstErr error
 	)
-	sem := make(chan struct{}, 8)
+	sem := make(chan struct{}, maxParallel)
 	for _, id := range missing {
 		wg.Go(func() {
 			sem <- struct{}{}

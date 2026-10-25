@@ -217,7 +217,7 @@ func TestAppendRetriesOnConcurrentChange(t *testing.T) {
 	}
 	s.srv.AfterWrite = func(srv *etapitest.Server, id string) { srv.SetContent(id, []byte("<p>always</p>")) }
 	_, errs, code = s.exec("", "append", meeting, "<p>mine</p>")
-	if code != 1 || !strings.Contains(errs, "note changed concurrently, please retry") {
+	if code != 1 || !strings.Contains(errs, "your change may be missing") || strings.Contains(errs, "nothing was changed") {
 		t.Errorf("exit %d: %s", code, errs)
 	}
 }
@@ -236,4 +236,41 @@ func TestRm(t *testing.T) {
 	s.run("undelete", meeting)
 	s.run("ls", projects)
 	s.golden("rm")
+}
+
+func TestEditOutcomes(t *testing.T) {
+	s := newSession(t)
+	seed(s)
+	c := s.srv.Add("chain1", "projects1", "c.txt", "code", "text/plain", "A")
+	// Chained pairs: B is consumed by the second pair (F3).
+	s.run("edit", c, "--old", "A", "--new", "B", "--old", "B", "--new", "C")
+	s.run("get", c, "-c")
+	// Deleting text must work and verify.
+	s.run("edit", c, "--old", "C", "--new", "")
+	// Another writer changes the note right after our write: never claim
+	// "nothing was changed", and don't redo the edit.
+	s.srv.SetContent(c, []byte("x1"))
+	s.srv.AfterWrite = func(srv *etapitest.Server, id string) { srv.SetContent(id, []byte("someone else")) }
+	s.run("edit", c, "--old", "x1", "--new", "x2")
+	s.srv.AfterWrite = nil
+	// The PUT itself fails.
+	s.srv.SetContent(c, []byte("y1"))
+	s.srv.Fail = "PUT /etapi/notes/"
+	s.run("edit", c, "--old", "y1", "--new", "y2")
+	s.srv.Fail = ""
+	s.golden("edit-outcomes")
+}
+
+func TestCreateExistingID(t *testing.T) {
+	s := newSession(t)
+	seed(s)
+	s.run("create", "Stable", "<p>once</p>", "-p", "projects1", "--id", "stable01")
+	s.run("create", "Stable again", "<p>twice</p>", "-p", "projects1", "--id", "stable01")
+	s.run("get", "stable01")
+	s.run("create", "Sys", "-p", "projects1", "--id", "_mine1")
+	s.run("create", "In hidden", "-p", "_hidden")
+	s.golden("create-existing")
+	if got := string(s.srv.Content("stable01")); got != "<p>once</p>" {
+		t.Errorf("existing note overwritten: %q", got)
+	}
 }

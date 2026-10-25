@@ -18,9 +18,11 @@ search, read, write and organize your notes from a shell, a script, or an AI age
 - **Covers the whole API.** Notes, the tree (moves and clones), labels and
   relations, attachments, revisions, journal notes, history, undelete,
   import and export.
-- **Safe by default.** Refuses to move a note into its own subtree, to delete
-  a note's last placement by accident, or to touch Trilium's system notes.
-  Deleted notes can be restored.
+- **Careful with your data.** Refuses to move a note into its own subtree, to
+  delete a note's last placement by accident, to overwrite an existing note
+  with `create --id`, or to change Trilium's system notes without `--force`.
+  When an error follows a partial change, the message says so. Deleted notes
+  can be restored.
 - **One small binary.** No runtime, no config file: two environment variables
   and you're done.
 
@@ -179,12 +181,21 @@ that Trilium expects, common patterns and pitfalls.
   cp -r skills/trilium ~/.claude/skills/
   ```
 
+- **Codex**: copy the folder to `~/.codex/skills/trilium`.
+
+  ```bash
+  cp -r skills/trilium ~/.codex/skills/
+  ```
+
 - **Other agents**: add the contents of `skills/trilium/SKILL.md` to the
   system prompt, and make the files in `references/` available to read.
 - **Several agents on one knowledge base**: give each one a name with
   `TRILIUM_AGENT=<name>`. Every note it creates gets the label
   `#agent=<name>`, so you can see who wrote what:
-  `trilium search '#agent=claude-1'`.
+  `trilium search '#agent="claude-1"'`.
+- **One writer per note.** Trilium's API has no conditional write, so two
+  agents changing the same note at the same moment can still lose an update.
+  Give each agent its own notes (for a shared log: one note per entry).
 
 Add `--json` to any command to get JSON Lines (ETAPI field names) for scripts.
 

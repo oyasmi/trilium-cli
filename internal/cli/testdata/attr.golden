@@ -48,7 +48,7 @@ stderr| hint: examples: '#status=done'  '+#tag=x'  '-#todo'  '~seeAlso=<note>'
 exit: 2
 
 $ trilium attr meeting1 '~rel=missing1'
-stderr| error: Note 'missing1' not found. [NOTE_NOT_FOUND]
+stderr| error: relation target missing1 does not exist; nothing was changed
 stderr| hint: find note IDs with: trilium search <words>
 exit: 3
 
@@ -72,7 +72,7 @@ $ trilium attr meeting1 -- '-#todo'
 removed #todo from meeting1
 
 $ trilium --json attr meeting1 '#status=final' '-#tag'
-{"attributeId":"a0015","noteId":"meeting1","type":"label","name":"status","value":"final","position":50,"isInheritable":false,"utcDateModified":"2026-10-25 08:00:25.000Z"}
+{"attributeId":"a0015","noteId":"meeting1","type":"label","name":"status","value":"final","position":60,"isInheritable":false,"utcDateModified":"2026-10-25 08:00:25.000Z"}
 {"attributeId":"a0007","noteId":"meeting1","type":"label","name":"tag","value":"d","position":40,"isInheritable":false,"utcDateModified":"2026-10-25 08:00:17.000Z","removed":true}
 {"attributeId":"a0013","noteId":"meeting1","type":"label","name":"tag","value":"c","position":60,"isInheritable":false,"utcDateModified":"2026-10-25 08:00:23.000Z","removed":true}
 

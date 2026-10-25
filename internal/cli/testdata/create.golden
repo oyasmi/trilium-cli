@@ -28,7 +28,8 @@ $ trilium create Fixed -p projects1 --id myFixedId1 --pos 5
 created myFixedId1 text "Fixed" in projects1
 
 $ trilium create Fixed -p projects1 --id myFixedId1
-stderr| error: Note 'myFixedId1' already exists. [NOTE_ALREADY_EXISTS]
+stderr| error: note myFixedId1 already exists ("Fixed"); nothing was created
+stderr| hint: pick another ID, or change the existing note with: trilium put / update myFixedId1
 exit: 1
 
 $ trilium create 'Stdin note' -f - -p projects1

@@ -30,6 +30,33 @@ func Time(utc string, loc *time.Location) string {
 	return t.In(loc).Format("2006-01-02 15:04")
 }
 
+// Clean makes a value safe for line-oriented output: tab, newline and
+// carriage return become \t, \n and \r, other control characters \xNN.
+// Stored data is never changed; this only affects what is printed.
+func Clean(s string) string {
+	if !strings.ContainsFunc(s, isControl) {
+		return s
+	}
+	var b strings.Builder
+	for _, r := range s {
+		switch {
+		case r == '\t':
+			b.WriteString(`\t`)
+		case r == '\n':
+			b.WriteString(`\n`)
+		case r == '\r':
+			b.WriteString(`\r`)
+		case isControl(r):
+			fmt.Fprintf(&b, `\x%02x`, r)
+		default:
+			b.WriteRune(r)
+		}
+	}
+	return b.String()
+}
+
+func isControl(r rune) bool { return r < 0x20 || r == 0x7f || (r >= 0x80 && r < 0xa0) }
+
 // IsSystemID reports whether the ID belongs to Trilium's hidden subtree,
 // launchers, options and similar internal notes.
 func IsSystemID(id string) bool { return strings.HasPrefix(id, "_") }
@@ -62,7 +89,7 @@ func NoteLine(n *etapi.Note, long bool, loc *time.Location) string {
 	if long {
 		f = append(f, dash(n.Mime), dash(Time(n.UTCDateModified, loc)))
 	}
-	f = append(f, n.Title)
+	f = append(f, Clean(n.Title))
 	if c := VisibleChildren(n); c > 0 {
 		f = append(f, fmt.Sprintf("+%d", c))
 	}
@@ -94,12 +121,12 @@ func TypeMime(typ, mime string) string {
 
 // Attr renders an attribute in CLI notation, e.g. #status=done or ~seeAlso=abc.
 func Attr(a etapi.Attribute) string {
-	return attrspec.Format(a.Type, a.Name, a.Value, a.IsInheritable)
+	return Clean(attrspec.Format(a.Type, a.Name, a.Value, a.IsInheritable))
 }
 
 // inheritedAttr omits "(inheritable)": every inherited attribute has it.
 func inheritedAttr(a etapi.Attribute) string {
-	return attrspec.Format(a.Type, a.Name, a.Value, false)
+	return Clean(attrspec.Format(a.Type, a.Name, a.Value, false))
 }
 
 // SplitAttrs separates a note's own attributes from inherited ones.
@@ -184,7 +211,7 @@ func RevisionHeader(r *etapi.Revision, content string, loc *time.Location) strin
 func kv(b *strings.Builder, k, v string) {
 	b.WriteString(k)
 	b.WriteString(": ")
-	b.WriteString(v)
+	b.WriteString(Clean(v))
 	b.WriteByte('\n')
 }
 
@@ -213,7 +240,7 @@ func BinaryNotice(mime, saveCmd string) string {
 }
 
 // Q wraps a title in double quotes.
-func Q(s string) string { return `"` + s + `"` }
+func Q(s string) string { return `"` + Clean(s) + `"` }
 
 // Ref renders an ID followed by the alias the user typed, if any:
 // "e2GMUhHk0e9v (@inbox)".

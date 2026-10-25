@@ -15,8 +15,9 @@
 - **精确。** 笔记内容按字节原样读写，工具绝不在背后改写你的 HTML 或代码。
 - **覆盖完整的 API。** 笔记、树结构（移动和克隆）、标签和关系、附件、修订版本、日记、
   历史记录、恢复删除、导入导出。
-- **默认安全。** 拒绝把笔记移进它自己的子树、拒绝误删笔记的最后一个位置、不碰 Trilium 的
-  系统笔记。删除的笔记可以恢复。
+- **小心对待你的数据。** 拒绝把笔记移进它自己的子树、拒绝误删笔记的最后一个位置、拒绝用
+  `create --id` 覆盖已有笔记；修改 Trilium 的系统笔记需要加 `--force`。出错时如果已经改动了
+  一部分，错误信息会明确说明。删除的笔记可以恢复。
 - **单个小巧的可执行文件。** 不需要运行环境，也没有配置文件：设置两个环境变量就能用。
 
 ## 安装
@@ -173,11 +174,19 @@ trilium undelete <id>
   cp -r skills/trilium ~/.claude/skills/
   ```
 
+- **Codex**：把这个目录复制到 `~/.codex/skills/trilium`。
+
+  ```bash
+  cp -r skills/trilium ~/.codex/skills/
+  ```
+
 - **其他 agent**：把 `skills/trilium/SKILL.md` 的内容加入系统提示词，并让 agent 能读取
   `references/` 下的文件。
 - **多个 agent 共用一个知识库**：用 `TRILIUM_AGENT=<名字>` 给每个 agent 起名。它创建的
   每条笔记都会带上标签 `#agent=<名字>`，方便查看是谁写的：
-  `trilium search '#agent=claude-1'`。
+  `trilium search '#agent="claude-1"'`。
+- **一条笔记只由一个写入者修改。** Trilium 的接口没有条件写入，两个 agent 同时修改同一条笔记
+  仍可能丢失更新。请让每个 agent 写自己的笔记（共享日志可以每条记录一条笔记）。
 
 任何命令加上 `--json` 都会输出 JSON Lines（字段名与 ETAPI 一致），方便脚本处理。
 

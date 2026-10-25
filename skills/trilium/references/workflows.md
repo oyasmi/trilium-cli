@@ -46,14 +46,18 @@ To place it in the middle of the note, use `edit` with an `--old` anchor and a
 
 ```bash
 trilium search 'note.title *=* invoice' --in <finance> -n 0
-for id in $(trilium search 'note.title *=* invoice' --in <finance> -n 0 | cut -f1); do
-  trilium attr "$id" '#status=paid' '-#todo'
+ids=$(trilium search 'note.title *=* invoice' --in <finance> -n 0 | cut -f1) || exit 1
+for id in $ids; do
+  trilium attr "$id" '#status=paid' '-#todo' || echo "failed: $id"
 done
 trilium search '#status=paid' --in <finance> -n 0   # verify
 ```
 
-For the direct children of a folder use `trilium ls <folder> | cut -f1`
-instead (don't use `ls -d N` here: deeper levels are indented).
+For the direct children of a folder use `trilium ls <folder> -n 0 | cut -f1`
+instead (`ls` stops at 100 lines without `-n 0`; don't use `-d N` here: deeper
+levels are indented). Titles with tabs or newlines are printed escaped
+(`\t`, `\n`), so every row stays one line. For scripts, `--json` is the most
+robust input.
 
 `#name=value` changes an existing label or adds it, so repeating the loop is
 safe. Use `+#tag=value` only when you really want a second label of that name.
@@ -105,8 +109,13 @@ trilium undelete <noteId>        # restores the note and the subtree deleted wit
 ## Several agents on one knowledge base
 
 - Set `TRILIUM_AGENT=<name>` for each agent; every `create` adds `#agent=<name>`.
-- Find your own notes: `trilium search '#agent=<name>' --sort dateModified --desc`.
+- Find your own notes: `trilium search '#agent="<name>"' --sort dateModified --desc`.
 - See what changed recently: `trilium history --in <project>`.
-- `append` and `edit` retry when another writer changes the note at the same
-  time, so concurrent log entries are not lost.
-- `create --id <stable-id>` makes a retried create fail instead of duplicating.
+- Don't let several agents write the same note. `append` and `edit` detect
+  most concurrent changes (append retries, edit reports an unknown outcome),
+  but Trilium has no conditional write, so a lost update is still possible.
+  For a shared log, give each entry its own note (`create … -p <log-folder>`)
+  and read them together with `ls` or `search`.
+- `create --id <stable-id>` refuses an ID that already exists, so a retried
+  create doesn't duplicate or overwrite. (Two clients racing for the same new
+  ID at the same instant are not protected.)

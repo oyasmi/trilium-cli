@@ -125,8 +125,14 @@ func unquote(v string) (string, error) {
 			switch inner[i] {
 			case '"', '\\':
 				b.WriteByte(inner[i])
+			case 'n':
+				b.WriteByte('\n')
+			case 't':
+				b.WriteByte('\t')
+			case 'r':
+				b.WriteByte('\r')
 			default:
-				return "", fmt.Errorf(`only \" and \\ escapes are allowed in quoted values`)
+				return "", fmt.Errorf(`only \" \\ \n \t \r escapes are allowed in quoted values`)
 			}
 			continue
 		}
@@ -162,7 +168,7 @@ func quote(v string) string {
 	if !strings.ContainsAny(v, " \t\n\r\v\f\"") && !strings.ContainsRune(v, ' ') {
 		return v
 	}
-	r := strings.NewReplacer(`\`, `\\`, `"`, `\"`)
+	r := strings.NewReplacer(`\`, `\\`, `"`, `\"`, "\n", `\n`, "\t", `\t`, "\r", `\r`)
 	return `"` + r.Replace(v) + `"`
 }
 

@@ -60,6 +60,9 @@ type Server struct {
 	// AfterWrite, if set, runs right after a note content PUT is applied
 	// (used to simulate a concurrent writer overwriting it).
 	AfterWrite func(s *Server, noteID string)
+	// Fail, if set, makes matching requests ("METHOD /etapi/path" prefix
+	// match) answer 500 without doing anything.
+	Fail string
 }
 
 // New starts a fake server with root, the hidden subtree and an inbox.
@@ -347,6 +350,10 @@ func (s *Server) serve(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 401, map[string]any{"status": 401, "code": "NOT_AUTHENTICATED", "message": "Not authenticated"})
 		return
 	}
+	if s.Fail != "" && strings.HasPrefix(r.Method+" "+r.URL.Path, s.Fail) {
+		writeJSON(w, 500, map[string]any{"status": 500, "code": "INJECTED", "message": "injected failure"})
+		return
+	}
 	path := strings.TrimPrefix(r.URL.Path, "/etapi")
 	status, body, ctype, herr := s.route(r, path)
 	if herr != nil {
@@ -468,10 +475,13 @@ func (s *Server) createNote(r *http.Request) (int, []byte, string, *httpError) {
 	if _, ok := s.live(def.ParentNoteID); !ok {
 		return 0, nil, "", notFound("Note", def.ParentNoteID)
 	}
-	if def.NoteID != "" {
-		if _, ok := s.notes[def.NoteID]; ok {
-			return 0, nil, "", &httpError{400, "NOTE_ALREADY_EXISTS", fmt.Sprintf("Note '%s' already exists.", def.NoteID)}
-		}
+	if n, ok := s.live(def.NoteID); ok && def.NoteID != "" {
+		// Like Trilium 0.106.1: an existing note is silently overwritten.
+		n.Title, n.Type = def.Title, def.Type
+		n.Mime = def.Mime
+		s.SetContent(n.NoteID, []byte(def.Content))
+		br, _ := s.link(n.NoteID, def.ParentNoteID, def.Prefix, def.NotePosition)
+		return 201, js(etapi.NoteWithBranch{Note: s.view(n), Branch: *br}), "", nil
 	}
 	mime := def.Mime
 	if mime == "" {

@@ -1,0 +1,38 @@
+$ trilium attr meeting1 '#status=done' '~seeAlso=doesNotExist1'
+stderr| error: relation target doesNotExist1 does not exist; nothing was changed
+stderr| hint: find note IDs with: trilium search <words>
+exit: 3
+
+$ trilium attr meeting1
+a0002	#status=draft
+a0003	~seeAlso=script1
+
+$ trilium attr meeting1 '~seeAlso=root'
+stderr| error: injected failure [INJECTED]
+exit: 1
+
+$ trilium attr meeting1
+a0002	#status=draft
+a0003	~seeAlso=script1
+
+$ trilium attr meeting1 '~seeAlso=root'
+stderr| error: added ~seeAlso=root on meeting1, but removing the old ~seeAlso=script1 failed (injected failure [INJECTED]); the note now has both
+stderr| hint: remove the old one with: trilium attr meeting1 '-~seeAlso=script1'
+exit: 1
+
+$ trilium attr meeting1
+a0002	#status=draft
+a0003	~seeAlso=script1
+a0006	~seeAlso=root
+
+$ trilium attr script1 '#new=1' '#new=2'
+set #new=1 on script1
+stderr| error: injected failure [INJECTED]
+stderr| hint: the 1 operation(s) printed above were applied; the rest were not
+exit: 1
+
+$ trilium create Rel -p projects1 -a '~x=doesNotExist1'
+stderr| error: relation target doesNotExist1 does not exist; nothing was changed
+stderr| hint: find note IDs with: trilium search <words>
+exit: 3
+

@@ -26,7 +26,7 @@ func attCmd(rt *Runtime) *cobra.Command {
   trilium att add <note> -f chart.png
   trilium att get <attachmentId> -o chart.png`,
 	}
-	cmd.AddCommand(attLsCmd(rt), attGetCmd(rt), attAddCmd(rt), attPutCmd(rt), attUpdateCmd(rt), attRmCmd(rt))
+	cmd.AddCommand(attLsCmd(rt), attGetCmd(rt), addForce(attAddCmd(rt)), addForce(attPutCmd(rt)), addForce(attUpdateCmd(rt)), addForce(attRmCmd(rt)))
 	return cmd
 }
 
@@ -62,7 +62,7 @@ contentLength (characters for text, bytes for binary content).`,
 				return nil
 			}
 			for _, a := range list {
-				line := strings.Join([]string{a.AttachmentID, a.Role, a.Mime, strconv.Itoa(a.ContentLength), a.Title}, "\t")
+				line := strings.Join([]string{a.AttachmentID, a.Role, output.Clean(a.Mime), strconv.Itoa(a.ContentLength), output.Clean(a.Title)}, "\t")
 				if err := rt.emit(a, line); err != nil {
 					return err
 				}
@@ -117,7 +117,8 @@ func attGetCmd(rt *Runtime) *cobra.Command {
 				return err
 			}
 			if out != "-" {
-				return rt.emit(a, fmt.Sprintf("saved %s to %s (%d bytes)", id, out, len(data)))
+				return rt.emit(map[string]any{"attachmentId": id, "file": out, "bytes": len(data)},
+					fmt.Sprintf("saved %s to %s (%d bytes)", id, out, len(data)))
 			}
 			return nil
 		},
@@ -167,6 +168,9 @@ shows the HTML to put into a text note.`,
 			if err != nil {
 				return err
 			}
+			if err := guardPlace(ts[0].ID, forceFlag(cmd)); err != nil {
+				return err
+			}
 			ctx := cmd.Context()
 			binary := attBinary(role, mime) || content.IsBinary("", mime, body)
 			def := etapi.AttachmentCreate{OwnerID: ts[0].ID, Role: role, Mime: mime, Title: title, Position: intPtr(cmd, "pos", pos)}
@@ -180,6 +184,10 @@ shows the HTML to put into a text note.`,
 			if binary {
 				if err := c.PutAttachmentContent(ctx, a.AttachmentID, bytes.NewReader(body), true); err != nil {
 					return output.Fail("retry with: trilium att put "+a.AttachmentID+" -f <file>", "created attachment %s but uploading its content failed: %v", a.AttachmentID, err)
+				}
+				// Report the attachment as stored, not as it was before the upload.
+				if a, err = c.GetAttachment(ctx, a.AttachmentID); err != nil {
+					return err
 				}
 			}
 			line := fmt.Sprintf("added attachment %s to %s: %s %s %d bytes", a.AttachmentID, ts[0], output.Q(a.Title), a.Mime, len(body))
@@ -227,6 +235,9 @@ func attPutCmd(rt *Runtime) *cobra.Command {
 			ctx := cmd.Context()
 			a, err := c.GetAttachment(ctx, id)
 			if err != nil {
+				return err
+			}
+			if err := guardPlace(a.OwnerID, forceFlag(cmd)); err != nil {
 				return err
 			}
 			before := -1
@@ -284,6 +295,10 @@ func attUpdateCmd(rt *Runtime) *cobra.Command {
 			if err != nil {
 				return err
 			}
+			if err := guardPlace(before.OwnerID, forceFlag(cmd)); err != nil {
+				return err
+			}
+
 			a, err := c.PatchAttachment(ctx, id, p)
 			if err != nil {
 				return err
@@ -331,6 +346,9 @@ func attRmCmd(rt *Runtime) *cobra.Command {
 			ctx := cmd.Context()
 			a, err := c.GetAttachment(ctx, id)
 			if err != nil {
+				return err
+			}
+			if err := guardPlace(a.OwnerID, forceFlag(cmd)); err != nil {
 				return err
 			}
 			if err := c.DeleteAttachment(ctx, id); err != nil {

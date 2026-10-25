@@ -1,0 +1,96 @@
+[
+  {
+    "args": [
+      "--json",
+      "create",
+      "Search audit afedb810",
+      "-p",
+      "root",
+      "-t",
+      "book"
+    ],
+    "exit": 0,
+    "stdout": "{\"noteId\":\"g19b5oz4QkU2\",\"isProtected\":false,\"title\":\"Search audit afedb810\",\"type\":\"book\",\"mime\":\"\",\"blobId\":\"z4PhNX7vuL3xVChQ1m2A\",\"dateCreated\":\"2026-10-25 11:02:45.136+0000\",\"dateModified\":\"2026-10-25 11:02:45.138+0000\",\"utcDateCreated\":\"2026-10-25 11:02:45.137Z\",\"utcDateModified\":\"2026-10-25 11:02:45.138Z\",\"parentNoteIds\":[\"root\"],\"childNoteIds\":[],\"parentBranchIds\":[\"root_g19b5oz4QkU2\"],\"childBranchIds\":[],\"attributes\":[]}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "--json",
+      "create",
+      "Needle unique",
+      "<p>Search check</p>",
+      "-p",
+      "g19b5oz4QkU2",
+      "-a",
+      "#probecc805acf=codex-audit"
+    ],
+    "exit": 0,
+    "stdout": "{\"noteId\":\"q1nigKjNzH7L\",\"isProtected\":false,\"title\":\"Needle unique\",\"type\":\"text\",\"mime\":\"text/html\",\"blobId\":\"R3YV92DwXCOfXxXkrPdC\",\"dateCreated\":\"2026-10-25 11:02:45.468+0000\",\"dateModified\":\"2026-10-25 11:02:45.470+0000\",\"utcDateCreated\":\"2026-10-25 11:02:45.468Z\",\"utcDateModified\":\"2026-10-25 11:02:45.470Z\",\"parentNoteIds\":[\"g19b5oz4QkU2\"],\"childNoteIds\":[],\"parentBranchIds\":[\"g19b5oz4QkU2_q1nigKjNzH7L\"],\"childBranchIds\":[],\"attributes\":[{\"attributeId\":\"dUEkxsriCEO8\",\"noteId\":\"q1nigKjNzH7L\",\"type\":\"label\",\"name\":\"probecc805acf\",\"value\":\"codex-audit\",\"position\":10,\"isInheritable\":false,\"utcDateModified\":\"2026-10-25 11:02:45.624Z\"}]}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "search",
+      "note.noteId=\"q1nigKjNzH7L\"",
+      "--in",
+      "g19b5oz4QkU2"
+    ],
+    "exit": 0,
+    "stdout": "q1nigKjNzH7L\ttext\tNeedle unique\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "search",
+      "#probecc805acf",
+      "--in",
+      "g19b5oz4QkU2"
+    ],
+    "exit": 0,
+    "stdout": "q1nigKjNzH7L\ttext\tNeedle unique\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "search",
+      "#probecc805acf=codex-audit",
+      "--in",
+      "g19b5oz4QkU2"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": "no matches\nhint: values containing '.' or '-' must be quoted, e.g. note.title=\"hello.py\"\n"
+  },
+  {
+    "args": [
+      "search",
+      "#probecc805acf=\"codex-audit\"",
+      "--in",
+      "g19b5oz4QkU2"
+    ],
+    "exit": 0,
+    "stdout": "q1nigKjNzH7L\ttext\tNeedle unique\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "search",
+      "#agent=\"codex-audit\"",
+      "--in",
+      "g19b5oz4QkU2"
+    ],
+    "exit": 1,
+    "stdout": "",
+    "stderr": "error: Cannot read properties of undefined (reading 'noteId') [GENERIC]\n"
+  },
+  {
+    "args": [
+      "rm",
+      "g19b5oz4QkU2",
+      "-r"
+    ],
+    "exit": 0,
+    "stdout": "deleted g19b5oz4QkU2 \"Search audit afedb810\" (+1 child; undo: trilium undelete g19b5oz4QkU2)\n",
+    "stderr": ""
+  }
+]

@@ -61,6 +61,9 @@ several parents) needs --from to say which placement moves.`,
 			if src == dest.ID {
 				return output.Usage("to change its position use: trilium branch set "+t.ID+" "+src+" --pos N", "%s is already under %s", t.ID, src)
 			}
+			if err := guardPlace(dest.ID, forceFlag(cmd)); err != nil {
+				return err
+			}
 			if err := checkCycle(ctx, c, t.ID, dest.ID); err != nil {
 				return err
 			}
@@ -102,14 +105,14 @@ Branches are addressed as <note> <parent>, or by branch ID.`,
   trilium branch add <note> <parent>
   trilium branch rm <note> <parent>`,
 	}
-	cmd.AddCommand(branchLsCmd(rt), branchAddCmd(rt), branchSetCmd(rt), branchRmCmd(rt))
+	cmd.AddCommand(branchLsCmd(rt), addForce(branchAddCmd(rt)), addForce(branchSetCmd(rt)), branchRmCmd(rt))
 	return cmd
 }
 
 func branchLine(b *etapi.Branch) string {
 	s := b.BranchID + "\t" + b.ParentNoteID + "\t" + strconv.Itoa(b.NotePosition)
 	if b.Prefix != "" {
-		s += "\t" + b.Prefix
+		s += "\t" + output.Clean(b.Prefix)
 	}
 	return s
 }
@@ -148,8 +151,13 @@ func getBranches(ctx context.Context, c *etapi.Client, ids []string) ([]*etapi.B
 	out := make([]*etapi.Branch, len(ids))
 	errs := make([]error, len(ids))
 	var wg sync.WaitGroup
+	sem := make(chan struct{}, maxParallel)
 	for i, id := range ids {
-		wg.Go(func() { out[i], errs[i] = c.GetBranch(ctx, id) })
+		wg.Go(func() {
+			sem <- struct{}{}
+			defer func() { <-sem }()
+			out[i], errs[i] = c.GetBranch(ctx, id)
+		})
 	}
 	wg.Wait()
 	for _, err := range errs {
@@ -180,6 +188,11 @@ If it is already there, its prefix/position are updated instead.`,
 			t, p := ts[0], ts[1]
 			if t.ID == "root" {
 				return output.Usage("", "root can't be cloned")
+			}
+			for _, id := range []string{t.ID, p.ID} {
+				if err := guardPlace(id, forceFlag(cmd)); err != nil {
+					return err
+				}
 			}
 			ctx := cmd.Context()
 			if err := checkCycle(ctx, c, t.ID, p.ID); err != nil {
@@ -243,6 +256,11 @@ func branchSetCmd(rt *Runtime) *cobra.Command {
 			c, b, err := rt.locateBranch(ctx, args)
 			if err != nil {
 				return err
+			}
+			for _, id := range []string{b.NoteID, b.ParentNoteID} {
+				if err := guardPlace(id, forceFlag(cmd)); err != nil {
+					return err
+				}
 			}
 			nb, err := c.PatchBranch(ctx, b.BranchID, p)
 			if err != nil {

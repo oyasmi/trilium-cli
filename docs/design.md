@@ -145,6 +145,7 @@ warning: text notes store HTML; this content has no tags and will render as one 
 ```
 
 - 子节点数为 0 时省略这一列；有 `#archived` 标签时标记 `(archived)`。
+- 标题、分支前缀、附件标题和属性值里的制表符、换行等控制字符在文本输出中转义为 `\t`、`\n`、`\r`、`\xNN`，保证"一条记录一行"（审查 F6）。只影响显示，存储内容不变。
 - 加密笔记的标题显示为 `[protected]`（ETAPI 原样返回）。
 - `-l` 长格式会在 type 之后插入 mime 和修改时间：
 
@@ -194,7 +195,8 @@ hint: find note IDs with: trilium search <words>
 |---|---|
 | search、ls | ETAPI `Note`。`ls -d` 额外加一个 `"depth"` 字段 |
 | get | ETAPI `Note` 加上 `"content"`（二进制时省略；用 `--text` 时是文本视图，并附加 `"contentView":"text"`）和 `"attachments"`（Attachment 数组） |
-| 写操作 | 写入后的 ETAPI 实体（Note、Attribute、Branch、Attachment）。内容类写操作输出 `{"noteId","bytesBefore","bytesAfter","replacements"?}` |
+| 写操作 | 写入后的 ETAPI 实体（Note、Attribute、Branch、Attachment）；二阶段上传（二进制 `create`、`att add`）上传后重新读取，输出最终状态。内容类写操作输出 `{"noteId","bytesBefore","bytesAfter","replacements"?}` |
+| 保存文件（`-o FILE`） | `{"noteId"/"attachmentId"/"revisionId","file","bytes"}`。`-o -` 和不带 `-o` 的 `att get` 输出原始字节，是有意的例外 |
 | 错误 | 仍然写到 stderr，格式为 `{"error":{"status","code","message"},"hint"?}` |
 
 ### 4.6 退出码
@@ -222,14 +224,24 @@ hint: find note IDs with: trilium search <words>
 | `-~name` / `-~name=<note>` | 删除关系 |
 | `#name(inheritable)=value` | 设置可继承的标签；关系同理。可继承性和现有属性不同时，删除后重建 |
 
-- 值就是第一个 `=` 之后的全部内容。整个值可以用双引号包起来，例如 `'#title="a b"'`，此时支持 `\"` 和 `\\` 转义，这样 `get` 和 `attr` 输出的属性可以直接粘贴回来用。
+- 值就是第一个 `=` 之后的全部内容。整个值可以用双引号包起来，例如 `'#title="a b"'`，此时支持 `\"`、`\\`、`\n`、`\t`、`\r` 转义（值里有换行、制表符时格式化输出也用这种写法，保证一行），这样 `get` 和 `attr` 输出的属性可以直接粘贴回来用。
 - **名字校验**：只允许 Unicode 字母、数字、`_` 和 `:`。不合法时以退出码 2 报错，**不要**让服务器静默把空格替换成 `_`（实测服务器会这么做）。
 - 在 `create -a` 中，"设置"和"追加"效果相同（新笔记还没有属性）。
 
 ### 4.8 系统笔记保护
 
-- `rm`、`mv`、`branch rm` 拒绝操作 `root` 和 ID 以 `_` 开头的笔记（Trilium 的隐藏子树、启动器、选项等）。
-- `put`、`append`、`edit`、`update`、`attr` 写入 `_*` 笔记时要加 `--force`。
+系统笔记指 `root` 和 ID 以 `_` 开头的笔记（Trilium 的隐藏子树、启动器、选项等）。按"命令 × 目标"统一规定（审查后补全）：
+
+| 命令 | 一律拒绝 | 需要 `--force` |
+|---|---|---|
+| `rm`、`mv`（被移动的笔记）、`branch rm` | 是 | — |
+| `put`、`append`、`edit`、`update`、`attr` | — | 笔记是 `_…` |
+| `create` | — | `-p` 或 `--id` 是 `_…` |
+| `mv` | — | 新父节点是 `_…` |
+| `branch add`、`branch set` | 克隆 `root` | 笔记或父节点是 `_…` |
+| `att add/put/update/rm` | — | 附件所属笔记是 `_…` |
+| `import` | — | 父节点是 `_…` |
+
 - 读操作不受限制。
 
 ---
@@ -337,7 +349,7 @@ trilium create <title> [content] [-p <note>=@inbox] [-t text] [--mime M]
 - `-t code` 但没有 `--mime` 时，按标题的扩展名推断 mime（`hello.py` → `text/x-python`），推断不出来就用 `text/plain`。
 - `-t search`：内容参数作为搜索语句，创建后设置 `#searchString=<内容>` 标签（实测保存的搜索靠这个标签实现，笔记内容为空）。
 - `-a`：可以重复使用，语法见 4.7。
-- `--id`：指定 noteId（ETAPI 原生支持），用于幂等创建。ID 已存在时报错，agent 据此可以知道之前已经创建过。
+- `--id`：指定 noteId（ETAPI 原生支持），用于安全重试。**实测 Trilium 0.106.1 对已存在的 noteId 不报错，而是覆盖原笔记的标题、类型和内容**，之后删除这条笔记还会弄坏服务端内存里的属性索引（相关标签的搜索报错，直到重启）。所以 CLI 先 `GET /notes/{id}`，只有返回 `NOTE_NOT_FOUND` 才创建，已存在时以退出码 1 报错（审查 F1）。检查和创建之间仍有竞争窗口：两个客户端同时用同一个新 ID 创建时不受保护。
 - `--pos`：对应 `notePosition`。
 - 设置了 `TRILIUM_AGENT` 时，自动加上 `#agent=<name>`。
 - 实现：
@@ -359,7 +371,9 @@ trilium append <note> [content] [-f FILE] [--top] [--force]
 - **换行规则**：对非 text 类型（code 等），如果原文非空且不以 `\n` 结尾（用 `--top` 时是新内容不以 `\n` 结尾），自动补一个 `\n`，避免两行粘在一起。text 类型（HTML）只做字节拼接，不补任何东西。帮助里要写明这条规则。
 - 二进制笔记拒绝执行。
 - 实现：先读取 `blobId` 和内容，在本地拼接，写入前再 `GET /notes/{id}` 比对 `blobId`。如果发现被别人改过，就基于新内容重新计算，最多重试 3 次；仍然失败时报错 `note changed concurrently, please retry`。
-  - 实施补充：两个写入者可能同时通过 `blobId` 检查然后互相覆盖（实测两个并发 `append` 几乎必然如此）。所以写入后再读一次内容，确认刚写入的片段还在；不在就随机退避后重试（同样计入 3 次）。`edit` 检查每个非空的 `--new`。
+  - 实施补充：两个写入者可能同时通过 `blobId` 检查然后互相覆盖。所以写入后再读一次内容：与写入的字节完全相同即成功；不同说明有别人紧接着写入，`append` 检查自己的片段是否还在，不在就随机退避后重做（计入 3 次）。
+  - **局限（审查 F4）**：ETAPI 没有条件写入。两个写入者都通过检查、都读回自己的结果之后，后写的一方仍会覆盖前者，双方都无法察觉。所以 CLI 只承诺"尽力检测冲突"，文档要求同一条笔记只由一个写入者修改；共享日志改为每条记录一条笔记。
+  - 一旦发出过写入，后续的任何错误都不能再说"nothing was changed"：报告 `… the result is unknown` 或 `your change may be missing`，并提示用 `get -c` 核对。
 - 输出：
   ```
   appended tA1b2C3d +36 bytes: 2431 → 2467 bytes
@@ -381,7 +395,8 @@ trilium edit <note> --old-file F --new-file F [--all]
     ```
   - 多处匹配：报错并给出次数，确实要全部替换就加 `--all`。
 - `--new ""` 表示删除这段文字。片段较长或含特殊字符时，用 `--old-file/--new-file`。
-- 二进制笔记拒绝执行；并发处理和 `append` 相同。
+- 二进制笔记拒绝执行；并发处理和 `append` 相同，但写入后发现内容被别人改了时**不重做**（替换可能已经不适用于新内容），而是报告结果未知（退出码 1）。
+- 写入后只核对最终结果，不检查每一步的中间结果（`--old A --new B --old B --new C` 中的 `B` 本来就会被消耗；审查 F3）。
 - 输出：
   ```
   edited tA1b2C3d 2 replacements: 2431 → 2467 bytes
@@ -443,7 +458,9 @@ trilium attr <note> '#status=done' '-#todo' '~seeAlso=abc'
 - 列出时每行一条：`<attributeId>\t<属性写法>`；继承的属性在末尾加 `\t(from <ownerId>)`（继承来的属性必然可继承，所以不再写 `(inheritable)`）。
 - `attr` 自己解析参数，`-#todo`、`-~rel` 这类以 `-` 开头的操作不会被误认为选项；也支持用 `--` 结束选项。
 - 实测 ETAPI 返回的 `attributes` **包含继承来的属性**（`noteId` 是拥有者），所以"自有属性"按 `noteId` 过滤。
-- 操作语法见 4.7。所有操作先在本地解析和校验，全部合法才开始执行。实现时只需 `GET /notes/{id}` 一次，然后按需调用 `POST`、`PATCH`、`DELETE /attributes`。
+- 操作语法见 4.7。所有操作先在本地解析和校验，关系目标先解析并确认存在，全部通过才开始执行。实现时只需 `GET /notes/{id}` 一次，然后按需调用 `POST`、`PATCH`、`DELETE /attributes`。
+- 执行按顺序进行，不是事务：中途失败时，错误信息说明前面几个操作已经生效。
+- 修改关系或改变可继承性时**先建新属性、成功后再删旧属性**（审查 F2），新建失败时旧值保持不变；删除旧值失败时报告"两个都在"并给出清理命令。
 - 输出每个操作一行：
   ```
   set #status=done on tA1b2C3d
@@ -676,6 +693,7 @@ mime 以 Trilium 源码 `packages/commons/src/lib/mime_type.ts` 为准。在 `in
 | 16 | 修改分支时 `isExpanded` 可以改（规范说只能改 prefix 和 notePosition） | `branch set --expanded` 可用 |
 | 17 | `GET /notes/history` 的 `current_isDeleted`、`current_isProtected` 是 `0`/`1` 整数，不是布尔值 | 客户端用兼容两种写法的 `etapi.Bool` 解码；`--json` 输出统一为布尔值 |
 | 18 | 笔记的 `attributes` 包含继承来的属性（`noteId` 为拥有者） | `get`、`attr` 按 `noteId` 区分自有和继承；`attr` 的修改只作用于自有属性 |
+| 19 | `create-note` 遇到已存在的 `noteId` 不报错，直接覆盖；之后删除该笔记会损坏服务端属性索引（搜索相关标签报 `GENERIC`，重启后恢复） | `create --id` 先检查是否存在（5.4）。fake 服务器按实测行为模拟覆盖；`e2e/contract_test.go` 逐条核对 fake 的其他假设 |
 
 ---
 

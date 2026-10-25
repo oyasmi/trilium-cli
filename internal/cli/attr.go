@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"fmt"
 	"slices"
 	"strings"
 
@@ -144,80 +145,127 @@ func (rt *Runtime) applyAttrOps(ctx context.Context, c *etapi.Client, n *etapi.N
 		}
 		return a, err
 	}
-	for _, op := range ops {
-		value := op.Value
-		if op.Type == attrspec.Relation && op.Value != "" {
-			r, err := rt.resolve(ctx, c, op.Value)
-			if err != nil {
-				return err
+	values, err := rt.resolveTargets(ctx, c, ops)
+	if err != nil {
+		return err
+	}
+	for i, op := range ops {
+		if err := rt.applyAttrOp(ctx, c, t, op, values[i], &owned, find, create); err != nil {
+			if i > 0 {
+				return partialError(err, i)
 			}
-			value = r.ID
-		}
-		switch op.Kind {
-		case attrspec.Add:
-			a, err := create(op, value)
-			if err != nil {
-				return err
-			}
-			if err := rt.emit(a, "added "+output.Attr(*a)+" on "+t.String()); err != nil {
-				return err
-			}
-		case attrspec.Set:
-			a, err := rt.setAttr(ctx, c, n.NoteID, &owned, find(op, "", false), op, value, create)
-			if err != nil {
-				return err
-			}
-			if err := rt.emit(a, "set "+output.Attr(*a)+" on "+t.String()); err != nil {
-				return err
-			}
-		case attrspec.Remove:
-			idx := find(op, value, op.HasValue)
-			if len(idx) == 0 {
-				rt.warn("%s has no %s to remove", t, attrspec.Format(op.Type, op.Name, value, false))
-				continue
-			}
-			var names []string
-			var removed []etapi.Attribute
-			for _, i := range idx {
-				if err := c.DeleteAttribute(ctx, owned[i].AttributeID); err != nil {
-					return err
-				}
-				names = append(names, output.Attr(owned[i]))
-				removed = append(removed, owned[i])
-			}
-			owned = deleteIndexes(owned, idx)
-			if rt.JSON {
-				for _, a := range removed {
-					if err := output.JSONL(rt.Stdout, removedAttr{a, true}); err != nil {
-						return err
-					}
-				}
-				continue
-			}
-			rt.println("removed " + strings.Join(names, " ") + " from " + t.String())
+			return err
 		}
 	}
 	return nil
 }
 
+// partialError reports that the first done ops were applied before err.
+func partialError(err error, done int) error {
+	msg, hint, code := output.Describe(err)
+	note := fmt.Sprintf("the %d operation(s) printed above were applied; the rest were not", done)
+	if hint != "" {
+		note = hint + "\n      " + note
+	}
+	return &output.Error{Msg: msg, Hint: note, Exit: code}
+}
+
+func (rt *Runtime) applyAttrOp(ctx context.Context, c *etapi.Client, t target, op attrspec.Op, value string, owned *[]etapi.Attribute,
+	find func(attrspec.Op, string, bool) []int, create func(attrspec.Op, string) (*etapi.Attribute, error)) error {
+	switch op.Kind {
+	case attrspec.Add:
+		a, err := create(op, value)
+		if err != nil {
+			return err
+		}
+		return rt.emit(a, "added "+output.Attr(*a)+" on "+t.String())
+	case attrspec.Set:
+		a, err := rt.setAttr(ctx, c, t, owned, find(op, "", false), op, value, create)
+		if err != nil {
+			return err
+		}
+		return rt.emit(a, "set "+output.Attr(*a)+" on "+t.String())
+	case attrspec.Remove:
+		idx := find(op, value, op.HasValue)
+		if len(idx) == 0 {
+			rt.warn("%s has no %s to remove", t, attrspec.Format(op.Type, op.Name, value, false))
+			return nil
+		}
+		var names []string
+		var removed []etapi.Attribute
+		for _, i := range idx {
+			if err := c.DeleteAttribute(ctx, (*owned)[i].AttributeID); err != nil {
+				return err
+			}
+			names = append(names, output.Attr((*owned)[i]))
+			removed = append(removed, (*owned)[i])
+		}
+		*owned = deleteIndexes(*owned, idx)
+		if rt.JSON {
+			for _, a := range removed {
+				if err := output.JSONL(rt.Stdout, removedAttr{a, true}); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+		rt.println("removed " + strings.Join(names, " ") + " from " + t.String())
+	}
+	return nil
+}
+
+// resolveTargets resolves every relation target before anything is written,
+// and checks that targets of new relations exist.
+func (rt *Runtime) resolveTargets(ctx context.Context, c *etapi.Client, ops []attrspec.Op) ([]string, error) {
+	values := make([]string, len(ops))
+	for i, op := range ops {
+		values[i] = op.Value
+		if op.Type != attrspec.Relation || op.Value == "" {
+			continue
+		}
+		r, err := rt.resolve(ctx, c, op.Value)
+		if err != nil {
+			return nil, err
+		}
+		values[i] = r.ID
+		if op.Kind == attrspec.Remove {
+			continue
+		}
+		if _, err := c.GetNote(ctx, r.ID); err != nil {
+			if isNotFound(err) {
+				return nil, output.NotFound(output.HintSearch, "relation target %s does not exist; nothing was changed", op.Value)
+			}
+			return nil, err
+		}
+	}
+	return values, nil
+}
+
 // setAttr changes the first matching attribute in place when possible.
 // Relations and inheritability can't be patched, so those are re-created.
-func (rt *Runtime) setAttr(ctx context.Context, c *etapi.Client, noteID string, owned *[]etapi.Attribute, idx []int, op attrspec.Op, value string,
+func (rt *Runtime) setAttr(ctx context.Context, c *etapi.Client, t target, owned *[]etapi.Attribute, idx []int, op attrspec.Op, value string,
 	create func(attrspec.Op, string) (*etapi.Attribute, error)) (*etapi.Attribute, error) {
 	if len(idx) == 0 {
 		return create(op, value)
 	}
 	if len(idx) > 1 {
-		rt.warn("%s has %d %s attributes; changed the first one", noteID, len(idx), attrspec.Format(op.Type, op.Name, "", false))
+		rt.warn("%s has %d %s attributes; changed the first one", t.ID, len(idx), attrspec.Format(op.Type, op.Name, "", false))
 	}
 	cur := (*owned)[idx[0]]
 	switch {
 	case cur.IsInheritable != op.Inheritable || (op.Type == attrspec.Relation && cur.Value != value):
-		if err := c.DeleteAttribute(ctx, cur.AttributeID); err != nil {
+		// Create the replacement first: if that fails the old one is intact.
+		a, err := create(op, value)
+		if err != nil {
 			return nil, err
 		}
+		if err := c.DeleteAttribute(ctx, cur.AttributeID); err != nil {
+			old := attrspec.Format(cur.Type, cur.Name, cur.Value, false)
+			return nil, output.Fail("remove the old one with: trilium attr "+t.ID+" '-"+old+"'",
+				"added %s on %s, but removing the old %s failed (%v); the note now has both", output.Attr(*a), t, output.Attr(cur), err)
+		}
 		*owned = deleteIndexes(*owned, idx[:1])
-		return create(op, value)
+		return a, nil
 	case cur.Value != value:
 		a, err := c.PatchAttribute(ctx, cur.AttributeID, etapi.AttributePatch{Value: &value})
 		if err != nil {
