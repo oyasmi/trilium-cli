@@ -28,9 +28,10 @@ is usually missing or wrong (tokens: Trilium → Options → ETAPI).
 - **Text notes store HTML.** Write `<p>…</p>`, never Markdown or bare lines.
   Read [references/html.md](references/html.md) before writing anything beyond
   paragraphs and lists.
-- **Code notes store plain text** (scripts, logs, JSON, Markdown source).
-- Markdown to rich text: `trilium import <parent> doc.md`. Markdown kept as
-  text: `trilium create doc.md -f doc.md`.
+- **Code notes store plain text** (scripts, logs, JSON). A code note with a
+  Markdown mime is Trilium's Markdown note (source + preview).
+- Markdown to rich text: `trilium import <parent> doc.md` (converted to HTML).
+  Markdown kept as source: `trilium create doc.md -f doc.md`.
 - The CLI never rewrites content. Long content goes through a file: `-f path`.
 
 ## Commands
@@ -52,6 +53,28 @@ trilium rm <note>                           # delete (-r with children)
 `trilium help <command>` lists every flag. Also available, rarely needed:
 `update`, `branch`, `att` (attachments), `rev` (revisions), `export`, `import`,
 `history`, `undelete`, `backup`.
+
+## Working the Trilium way
+
+Trilium is a hierarchical note app with typed metadata, not a folder of Markdown
+files. Use its own ideas, and read
+[references/trilium-way.md](references/trilium-way.md) before organizing,
+structuring or capturing anything non-trivial:
+
+- **Tree + clones**: file a note under its topic; use a clone (`branch add`)
+  for a second home, never a copy. Archive (`#archived`) rather than delete.
+- **Attributes carry structure**: state and metadata go in labels
+  (`#status=done`), connections in relations (`~seeAlso=<id>`), not in titles.
+  Reuse the names already in the tree; built-in names such as `archived`,
+  `inbox`, `template`, `sorted`, `color` change behavior.
+- **Inbox** (`#inbox`) is for quick capture; the user refiles later. The
+  **journal** (`@today`, day notes) is for time-bound entries; lasting
+  knowledge goes in topic notes.
+- **Text notes are HTML** (rich editor). For Markdown to keep as source, make a
+  Markdown note: `trilium create doc.md -f doc.md`.
+- Templates, collections (`-t book`) and saved searches (`-t search`) exist for
+  repeated shapes, task tables and live lists. Search before you create.
+- Protected notes can't be read through the CLI; leave them alone.
 
 ## Creating a note
 
@@ -119,6 +142,9 @@ More recipes (images, batch tagging, safe rewrites, recovery, several agents):
 
 - [references/conventions.md](references/conventions.md): output formats,
   errors, exit codes, system-note rules. Read when output or an error is unclear.
+- [references/trilium-way.md](references/trilium-way.md): how Trilium expects to
+  be used (tree and clones, attributes, inbox, journal, templates, collections),
+  its strengths and weaknesses. Read before organizing or structuring notes.
 - [references/search.md](references/search.md): search syntax. Read before a
   non-trivial query.
 - [references/html.md](references/html.md): HTML for text notes. Read before

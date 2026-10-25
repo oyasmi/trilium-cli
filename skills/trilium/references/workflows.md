@@ -10,6 +10,7 @@ from earlier output.
 - Add an image to a note
 - Tag a batch of notes
 - Keep a work log in the journal
+- Track tasks with labels and a saved search
 - Rewrite a section of a long note safely
 - Export, import and Markdown
 - Recover a deleted note
@@ -84,6 +85,18 @@ trilium ls @2026-10                  # day notes of a month
 
 Calendar shortcuts create missing day/month/year notes (and the Calendar root
 on first use). Day boundaries follow the local time zone.
+
+## Track tasks with labels and a saved search
+
+```bash
+trilium create "Tasks" -p root -t book -a '#iconClass=bx bx-task'   # collection
+trilium create "Order supplies" "<p>…</p>" -p <tasks> -a '#status=todo'
+trilium attr <task> '#status=done'
+trilium create "Open tasks" -t search '#status=todo' -p <tasks>      # live list
+```
+
+One note per task, state in `#status`. In the app, switch the collection to
+Table or Board view to see and edit tasks as rows or columns.
 
 ## Rewrite a section of a long note safely
 

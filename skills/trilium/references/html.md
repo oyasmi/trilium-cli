@@ -97,12 +97,15 @@ Other files (PDF, CSV …) are attachments too; they are listed with `trilium at
 `<a href="#root/<noteId>">text</a>` links to another note (this is what
 Trilium's own Markdown import produces). The editor's "reference link" style,
 which shows the target note's title, is
-`<a class="reference-link" href="#root/<noteId>">title</a>`.
+`<a class="reference-link" href="#root/<noteId>">title</a>`. Links written
+through the CLI work for clicking but do not create backlinks; for a
+connection that must be queryable, also set a relation:
+`trilium attr <note> '~seeAlso=<noteId>'`.
 
 ## When not to write HTML
 
 - **Plain text, logs, scripts, data**: create a code note instead, e.g.
-  `trilium create notes.md -f notes.md` (a `.md` file becomes a code note with
-  Markdown highlighting) or `trilium create "Log" -t code -f out.txt`.
+  `trilium create notes.md -f notes.md` (a `.md` file becomes a Markdown note:
+  a code note with a Markdown mime, shown as source plus preview) or `trilium create "Log" -t code -f out.txt`.
 - **You have Markdown and want rich text**: `trilium import <parent> doc.md`.
   Trilium's own importer converts it to HTML like the above.
