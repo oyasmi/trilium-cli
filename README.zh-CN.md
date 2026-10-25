@@ -22,7 +22,27 @@
 
 ## 安装
 
-**下载**：从 [Releases 页面](https://github.com/oyasmi/trilium-cli/releases) 下载适合你系统的压缩包，
+**交给你的 AI agent 来做。** 把下面这段文字复制给 Claude Code、Codex 或其他编程 agent。
+没装过就安装 CLI 和 skill，装过就把两者都更新到最新版——以后想升级时再发一次即可。
+
+```text
+在这台电脑上安装或更新 `trilium` 命令行工具（https://github.com/oyasmi/trilium-cli）及其 agent skill。请逐步执行，最后告诉我你做了什么。
+
+1. 检查现状：运行 `trilium --version`（记下版本；如果已安装，用 `command -v trilium`，Windows 上用 `where trilium` 查出可执行文件的位置）。再看看你自己的 skills 目录里是否已有名为 `trilium` 的 skill 目录。
+2. 查最新版本：请求 https://api.github.com/repos/oyasmi/trilium-cli/releases/latest ，读取 `tag_name`（例如 v0.1.0；可执行文件显示的版本不带 "v"：`trilium 0.1.0 (commit …)`）。如果已安装的可执行文件已经是这个版本，就跳过第 5 步，但其余步骤照做：skill 可能过时或缺失。
+3. 选择适合本机系统和 CPU 的文件：`trilium_<不带 v 的版本号>_<os>_<arch>.tar.gz`，os 为 darwin 或 linux，arch 为 amd64 或 arm64；Windows 上是 `…_windows_<arch>.zip`。把它和同一个 release 里的 `checksums.txt` 下载到一个新建的临时目录，用 checksums.txt 校验压缩包的 SHA-256，不一致就停止。
+4. 解压。压缩包里有可执行文件 `trilium`（Windows 上是 `trilium.exe`），skill 在 `skills/trilium/` 目录。
+5. 安装可执行文件：
+   - 更新：直接替换原位置的旧文件。
+   - 新装：放到 `~/.local/bin`（不存在就创建），Windows 上放到 `%LOCALAPPDATA%\Programs\trilium`。如果该目录不在 PATH 中，告诉我应该往 shell 配置文件里加哪一行，不要自己改配置文件。
+   - macOS 上如果系统因为"来自互联网"而阻止运行，执行 `xattr -d com.apple.quarantine <路径>`。
+   - 需要 sudo 或要写入我的主目录以外的位置时，先问我。
+6. 安装 skill：把整个 `skills/trilium` 目录复制到你所属 agent 的 skills 目录（Claude Code：`~/.claude/skills/trilium`；Codex：`~/.codex/skills/trilium`；其他 agent：对应的目录，不确定就问我）。如果已有 `trilium` skill 目录，先和新的比较：有差异就整个替换旧目录（不要留下过时的参考文件），完全相同就保持不动。
+7. 验证：`trilium --version` 必须显示新版本。如果已设置 TRILIUM_URL 和 TRILIUM_ETAPI_TOKEN，再运行 `trilium info`，确认显示 `auth:    ok`。如果没有设置，告诉我设置方法：在 Trilium 中打开 选项 → ETAPI 创建 token，然后 `export TRILIUM_URL=<我的 Trilium 地址>`、`export TRILIUM_ETAPI_TOKEN=<token>`。不要显示 token，除非我要求，否则不要把它写进任何文件。
+8. 删除临时目录，然后汇报：可执行文件的旧版本 → 新版本（或"已是最新"）、skill 是新装 / 已更新 / 无变化、两者的路径，以及我还需要做的事。
+```
+
+**或者自己下载**：从 [Releases 页面](https://github.com/oyasmi/trilium-cli/releases) 下载适合你系统的压缩包，
 解压后把 `trilium` 放到 `PATH` 中的某个目录（例如 `/usr/local/bin`）。
 
 **或者用 Go 安装**（需要 Go 1.27 或更新版本）：

@@ -28,7 +28,28 @@ search, read, write and organize your notes from a shell, a script, or an AI age
 
 ## Install
 
-**Download** the archive for your system from the
+**Let your AI agent do it.** Copy the text below into Claude Code, Codex or
+another coding agent. It installs the CLI and the skill, or updates both if
+they are already installed — run it again whenever you want the latest version.
+
+```text
+Install or update the `trilium` CLI (https://github.com/oyasmi/trilium-cli) and its agent skill on this machine. Work step by step, and tell me what you did at the end.
+
+1. Check the current state: run `trilium --version` (note the version and, if it exists, where the binary lives: `command -v trilium`, or `where trilium` on Windows). Also look for an existing skill folder named `trilium` in your own skills directory.
+2. Find the latest release: GET https://api.github.com/repos/oyasmi/trilium-cli/releases/latest and read `tag_name` (e.g. v0.1.0; the binary prints it without the "v": `trilium 0.1.0 (commit …)`). If the installed binary already reports that version, skip step 5 but still do the rest: the skill may be outdated or missing.
+3. Pick the asset for this OS and CPU: `trilium_<version without v>_<os>_<arch>.tar.gz` with os = darwin | linux and arch = amd64 | arm64, or `…_windows_<arch>.zip` on Windows. Download it and `checksums.txt` from the same release into a new temporary directory, and verify the SHA-256 of the archive against checksums.txt. Stop if it doesn't match.
+4. Unpack the archive. It contains the `trilium` binary (`trilium.exe` on Windows), and the skill in `skills/trilium/`.
+5. Install the binary:
+   - Updating: replace the existing binary at the same path.
+   - New install: use `~/.local/bin` (create it if needed), or `%LOCALAPPDATA%\Programs\trilium` on Windows. If that directory isn't on PATH, tell me the exact line to add to my shell profile; don't edit the profile yourself.
+   - On macOS, if the binary is blocked as downloaded from the internet, run `xattr -d com.apple.quarantine <path>`.
+   - Ask me before using sudo or writing outside my home directory.
+6. Install the skill: copy the whole `skills/trilium` folder into the skills directory of the agent you are (Claude Code: `~/.claude/skills/trilium`; Codex: `~/.codex/skills/trilium`; other agents: your equivalent, or ask me). If a `trilium` skill folder already exists, compare it with the new one; if they differ, replace the old folder entirely (no stale reference files may remain), otherwise leave it.
+7. Verify: `trilium --version` must print the new version. If TRILIUM_URL and TRILIUM_ETAPI_TOKEN are set, also run `trilium info` and check it shows `auth:    ok`. If they aren't set, tell me how to set them: in Trilium, open Options → ETAPI, create a token, then `export TRILIUM_URL=<my Trilium address>` and `export TRILIUM_ETAPI_TOKEN=<token>`. Never print a token, and don't write it to any file unless I ask.
+8. Remove the temporary directory and report: binary old → new version (or "already up to date"), skill installed / updated / unchanged, both paths, and anything I still need to do.
+```
+
+**Or download it yourself**: get the archive for your system from the
 [releases page](https://github.com/oyasmi/trilium-cli/releases), unpack it, and put
 `trilium` somewhere on your `PATH` (for example `/usr/local/bin`).
 
