@@ -1,0 +1,24 @@
+$ trilium export projects1
+exported projects1 to ./Projects.zip (30 bytes)
+
+$ trilium export projects1 --format markdown -o out.zip
+exported projects1 to out.zip (34 bytes)
+
+$ trilium export projects1 --format pdf
+stderr| error: --format must be html or markdown
+exit: 2
+
+$ trilium import projects1 '$DIR/Weekly report.md'
+imported n0006 "Weekly report (markdown)" into projects1
+
+$ trilium import projects1 '$DIR/backup.zip'
+imported n0007 "inner (markdown)" into projects1
+
+$ trilium import projects1 '$DIR/x.txt'
+stderr| error: can import .zip or .md files, not "x.txt"
+exit: 2
+
+$ trilium import projects1 /nonexistent/file.md
+stderr| error: can't read /nonexistent/file.md: open /nonexistent/file.md: no such file or directory
+exit: 2
+

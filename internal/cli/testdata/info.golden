@@ -1,0 +1,25 @@
+$ trilium info
+server:  http://trilium.test (Trilium 0.106.1)
+auth:    ok
+notes:   8 active, 0 deleted
+agent:   (not set)
+
+$ trilium info
+server:  http://trilium.test (Trilium 0.106.1)
+auth:    ok
+notes:   8 active, 0 deleted
+agent:   claude-1
+
+$ trilium backup
+backup created on server: backup-now.db
+
+$ trilium backup before-cleanup
+stderr| error: backup names may use letters, digits and _ (at most 32)
+exit: 2
+
+$ trilium backup nightly_1
+backup created on server: backup-nightly_1.db
+
+$ trilium --json backup
+{"file":"backup-now.db"}
+

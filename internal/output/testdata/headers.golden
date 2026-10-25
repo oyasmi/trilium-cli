@@ -1,0 +1,52 @@
+---
+id: tText01
+title: 会议纪要
+type: text (text/html)
+parents: etapiSandbox01, xYz12345
+attrs: #status=published #todo ~seeAlso=tCodePy01
+children: 3
+attachments: 1
+created: 2026-10-25 16:55
+modified: 2026-10-25 16:57
+---
+---
+id: tText01
+title: 会议纪要
+type: text (text/html)
+parents: etapiSandbox01, xYz12345
+attrs: #status=published #todo ~seeAlso=tCodePy01
+inherited: #project=etapi (from etapiSandbox01)
+children: 3
+attachments: 0
+created: 2026-10-25 16:55
+modified: 2026-10-25 16:57
+content: plain-text view (read-only; not the stored HTML)
+---
+---
+id: img1
+title: red.png
+type: image (image/png)
+parents: root
+children: 0
+attachments: 0
+created: 
+modified: 
+protected: yes (content is not readable through ETAPI)
+content: binary (image/png), save with: trilium get img1 -o <file>
+---
+---
+id: R1a2b3c4
+note: tText01
+title: 旧标题
+type: text (text/html)
+created: 2026-10-25 16:00
+edited: 2026-10-25 15:59
+---
+---
+id: R2
+note: n
+title: 
+type: book
+created: 
+content: plain-text view (read-only; not the stored HTML)
+---

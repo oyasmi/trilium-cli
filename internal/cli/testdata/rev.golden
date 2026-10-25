@@ -1,0 +1,54 @@
+$ trilium rev ls meeting1
+stderr| no revisions
+
+$ trilium rev add meeting1
+created revision r0006 of meeting1
+
+$ trilium put meeting1 '<p>new</p>'
+updated meeting1 content: 68 → 10 bytes
+
+$ trilium rev add meeting1
+created revision r0007 of meeting1
+
+$ trilium rev ls meeting1
+r0007	2026-10-25 16:00	10	Meeting notes
+r0006	2026-10-25 16:00	68	Meeting notes
+
+$ trilium rev get r0006
+---
+id: r0006
+note: meeting1
+title: Meeting notes
+type: text (text/html)
+created: 2026-10-25 16:00
+edited: 2026-10-25 16:00
+---
+<h2>Agenda</h2><p>Budget review</p><ul><li>one</li><li>two</li></ul>
+
+$ trilium rev get r0006 --text
+---
+id: r0006
+note: meeting1
+title: Meeting notes
+type: text (text/html)
+created: 2026-10-25 16:00
+edited: 2026-10-25 16:00
+content: plain-text view (read-only; not the stored HTML)
+---
+Agenda
+
+Budget review
+- one
+- two
+
+$ trilium rev get r0006 -o rev.html
+saved r0006 to rev.html (68 bytes)
+
+$ trilium rev get missing99
+stderr| error: Revision 'missing99' not found. [REVISION_NOT_FOUND]
+stderr| hint: list a note's revisions with: trilium rev ls <note>
+exit: 3
+
+$ trilium --json rev get r0006 --text
+{"revisionId":"r0006","noteId":"meeting1","type":"text","mime":"text/html","isProtected":false,"title":"Meeting notes","utcDateLastEdited":"2026-10-25 08:00:08.000Z","utcDateCreated":"2026-10-25 08:00:16.000Z","contentLength":68,"content":"Agenda\n\nBudget review\n- one\n- two\n","contentView":"text"}
+

@@ -1,0 +1,19 @@
+$ trilium update meeting1 --title 'Weekly sync'
+updated meeting1 title: "Meeting notes" → "Weekly sync"
+
+$ trilium update script1 --type code --mime text/x-go
+updated script1 type: code → code, mime: text/x-python → text/x-go
+
+$ trilium update script1
+stderr| error: nothing to update: give --title, --type or --mime
+stderr| hint: example: trilium update <note> --title "New title"
+exit: 2
+
+$ trilium update _options --title x
+stderr| error: _options is a Trilium system note
+stderr| hint: add --force if you really mean to change it
+exit: 2
+
+$ trilium --json update meeting1 --title Again
+{"noteId":"meeting1","isProtected":false,"title":"Again","type":"text","mime":"text/html","blobId":"bdce3f9a189a2233f","utcDateCreated":"2026-10-25 08:00:08.000Z","utcDateModified":"2026-10-25 08:00:18.000Z","parentNoteIds":["projects1"],"childNoteIds":[],"parentBranchIds":["projects1_meeting1"],"childBranchIds":[],"attributes":[{"attributeId":"a0002","noteId":"meeting1","type":"label","name":"status","value":"draft","position":10,"isInheritable":false},{"attributeId":"a0003","noteId":"meeting1","type":"relation","name":"seeAlso","value":"script1","position":20,"isInheritable":false},{"attributeId":"a0001","noteId":"projects1","type":"label","name":"project","value":"etapi","position":10,"isInheritable":true}]}
+

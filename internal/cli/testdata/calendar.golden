@@ -1,0 +1,28 @@
+$ trilium append @today '<p>log</p>'
+appended cal_2026_10_25 (@today) +10 bytes: 0 → 10 bytes
+
+$ trilium get @yesterday -m
+---
+id: cal_2026_10_24
+title: 2026-10-24
+type: text (text/html)
+parents: calendar
+children: 0
+attachments: 0
+created: 2026-10-25 16:00
+modified: 2026-10-25 16:00
+---
+
+$ trilium ls @2026-10
+stderr| no matches
+
+$ trilium create Entry '<p>x</p>' -p @2026-W43
+created n0006 text "Entry" in cal_2026_W43 (@2026-W43)
+
+$ trilium attr @2026 '#year'
+set #year on cal_2026 (@2026)
+
+$ trilium get @2026-02-30
+stderr| error: invalid note reference "@2026-02-30": not a real date (use @YYYY-MM-DD)
+exit: 2
+

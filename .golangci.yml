@@ -1,0 +1,35 @@
+version: "2"
+linters:
+  default: none
+  enable:
+    - govet
+    - staticcheck
+    - errcheck
+    - revive
+    - ineffassign
+    - unused
+  settings:
+    errcheck:
+      exclude-functions:
+        # Printing to the terminal: there is nothing useful to do on failure.
+        - fmt.Fprint
+        - fmt.Fprintf
+        - fmt.Fprintln
+    revive:
+      rules:
+        - name: exported
+        - name: package-comments
+        - name: var-naming
+        - name: indent-error-flow
+        - name: error-strings
+        - name: receiver-naming
+        - name: unused-parameter
+          disabled: true
+  exclusions:
+    generated: lax
+    rules:
+      - path: _test\.go
+        linters: [errcheck]
+formatters:
+  enable:
+    - gofmt

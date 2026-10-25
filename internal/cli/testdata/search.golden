@@ -1,0 +1,29 @@
+$ trilium search budget
+meeting1	text	Meeting notes
+
+$ trilium search '#status=draft' -l
+meeting1	text	text/html	2026-10-25 16:00	Meeting notes
+
+$ trilium search '#project' --in projects1
+meeting1	text	Meeting notes
+old1	text	Old	(archived)
+projects1	book	Projects	+3
+script1	code	Script.py
+
+$ trilium search note.noteId '!=' '""' -n 2
+inbox1	text	Inbox
+meeting1	text	Meeting notes
+
+$ trilium search hidden
+stderr| no matches
+
+$ trilium search nothing-here-at-all
+stderr| no matches
+
+$ trilium search note.title=hello.py
+stderr| no matches
+stderr| hint: values containing '.' or '-' must be quoted, e.g. note.title="hello.py"
+
+$ trilium --json search budget
+{"noteId":"meeting1","isProtected":false,"title":"Meeting notes","type":"text","mime":"text/html","blobId":"bdce3f9a189a2233f","utcDateCreated":"2026-10-25 08:00:08.000Z","utcDateModified":"2026-10-25 08:00:08.000Z","parentNoteIds":["projects1"],"childNoteIds":[],"parentBranchIds":["projects1_meeting1"],"childBranchIds":[],"attributes":[{"attributeId":"a0002","noteId":"meeting1","type":"label","name":"status","value":"draft","position":10,"isInheritable":false},{"attributeId":"a0003","noteId":"meeting1","type":"relation","name":"seeAlso","value":"script1","position":20,"isInheritable":false},{"attributeId":"a0001","noteId":"projects1","type":"label","name":"project","value":"etapi","position":10,"isInheritable":true}]}
+

@@ -1,0 +1,34 @@
+$ trilium branch add script1 root
+cloned script1 into root (branch root_script1)
+
+$ trilium rm meeting1
+stderr| error: meeting1 "Meeting notes" has 1 child; use -r to delete them too
+stderr| hint: add -r to delete the whole subtree
+exit: 2
+
+$ trilium rm meeting1 -r
+deleted meeting1 "Meeting notes" (+1 child; undo: trilium undelete meeting1)
+
+$ trilium rm script1
+deleted script1 "Script.py" (undo: trilium undelete script1) (was in 2 places; to remove one placement use: trilium branch rm)
+
+$ trilium rm root
+stderr| error: refusing to delete root: it is a Trilium system note
+exit: 2
+
+$ trilium rm _hidden
+stderr| error: refusing to delete _hidden: it is a Trilium system note
+exit: 2
+
+$ trilium rm projects1 missing1 -r
+stderr| error: Note 'missing1' not found. [NOTE_NOT_FOUND]
+stderr| hint: find note IDs with: trilium search <words>
+exit: 3
+
+$ trilium undelete meeting1
+restored meeting1 "Meeting notes"
+
+$ trilium ls projects1
+meeting1	text	Meeting notes	+1
+old1	text	Old	(archived)
+

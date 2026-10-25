@@ -1,0 +1,12 @@
+# Build output
+/trilium
+/trilium.exe
+/dist/
+*.zip
+coverage.out
+
+# Local secrets and editor files
+.env
+.DS_Store
+.idea/
+.vscode/

@@ -1,0 +1,89 @@
+$ trilium 
+trilium - work with Trilium Notes from the command line
+
+Everyday
+  search <query>          Find notes (Trilium search syntax)
+  ls [note]               List child notes
+  get <note>...           Show a note's details and content
+  create <title> [text]   Create a note (default parent: @inbox)
+  append <note> [text]    Add content to the end of a note
+  edit <note>             Replace exact text in a note
+  put <note> [text]       Replace a note's whole content
+  rm <note>...            Delete notes
+
+Organize
+  update  attr  mv  branch  att (attachments)  rev (revisions)
+
+More
+  export  import  history  undelete  info  backup
+
+<note> can be a note ID, "root", or a shortcut: @inbox @today @2026-10-25
+Long content: use -f FILE (or -f - for stdin).
+Details: trilium help <command>   Search syntax: trilium help search
+
+$ trilium --version
+trilium 1.2.3 (commit abc1234)
+
+$ trilium version
+trilium 1.2.3 (commit abc1234)
+
+$ trilium help get
+Usage: trilium get <note>...
+
+Show each note's metadata header followed by its raw content (HTML for text
+notes). Binary content is never printed; save it with -o FILE.
+--text shows a read-only plain-text view of text notes: don't use it for edit --old.
+
+Flags:
+      --all-attrs       also list inherited attributes
+  -c, --content         print only the raw content
+  -m, --meta            print only the metadata header
+  -o, --output string   save the raw content to FILE (- for stdout)
+      --text            plain-text view of text notes (read-only)
+
+Examples:
+  trilium get <id1> <id2>
+  trilium get <id> -c            # raw content only
+  trilium get <id> -o photo.png  # save content to a file
+
+$ trilium append --help
+Usage: trilium append <note> [content]
+
+Add content to the end of a note (or the start with --top).
+Text notes (HTML) are joined byte for byte. For other notes (code etc.) a
+newline is inserted when needed so that lines don't run together.
+
+Flags:
+  -f, --file string   read content from FILE (- for stdin)
+      --force         allow changing Trilium system notes
+      --top           add to the start instead of the end
+
+Examples:
+  trilium append @today "<p>Called Alice about the budget.</p>"
+  trilium append <id> -f section.html
+  trilium append <code-note> -f - --top < header.txt
+
+$ trilium help nope
+stderr| error: unknown help topic "nope"
+stderr| hint: run: trilium help
+exit: 2
+
+$ trilium nope
+stderr| error: unknown command "nope"
+stderr| hint: run: trilium help
+exit: 2
+
+$ trilium get
+stderr| error: trilium get: missing arguments
+stderr| hint: usage: trilium get <note>...   (more: trilium help get)
+exit: 2
+
+$ trilium get x --bogus
+stderr| error: unknown flag: --bogus
+stderr| hint: see: trilium help get
+exit: 2
+
+$ trilium get 'bad id!'
+stderr| error: invalid note reference "bad id!": use a note ID, "root", or a shortcut like @inbox, @today, @2026-10-25
+exit: 2
+

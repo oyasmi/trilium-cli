@@ -1,0 +1,103 @@
+$ trilium mv meeting1 archive1
+moved meeting1 "Meeting notes": projects1 → archive1
+
+$ trilium ls archive1
+meeting1	text	Meeting notes	+1
+
+$ trilium mv archive1 child1
+stderr| error: can't place archive1 under child1: child1 is inside archive1, which would create a loop
+exit: 1
+
+$ trilium mv archive1 archive1
+stderr| error: can't place archive1 under itself
+exit: 1
+
+$ trilium mv root archive1
+stderr| error: refusing to move root: it is a Trilium system note
+exit: 2
+
+$ trilium mv meeting1 archive1
+stderr| error: meeting1 is already under archive1
+stderr| hint: to change its position use: trilium branch set meeting1 archive1 --pos N
+exit: 2
+
+$ trilium branch add script1 archive1 --prefix '2026: '
+cloned script1 into archive1 (branch archive1_script1)
+
+$ trilium branch add script1 archive1 --pos 1
+updated existing branch archive1_script1 (script1 was already in archive1)
+
+$ trilium branch add archive1 child1
+stderr| error: can't place archive1 under child1: child1 is inside archive1, which would create a loop
+exit: 1
+
+$ trilium branch ls script1
+projects1_script1	projects1	20
+archive1_script1	archive1	1
+
+$ trilium mv script1 root
+stderr| error: script1 is in 2 places; say which one to move
+stderr| hint: add --from <parent>; its parents are: projects1, archive1
+exit: 2
+
+$ trilium mv script1 root --from projects1 --pos 1
+moved script1 "Script.py": projects1 → root
+
+$ trilium ls
+script1	code	Script.py
+projects1	book	Projects	+1
+inbox1	text	Inbox
+archive1	book	Archive	+2
+
+$ trilium branch set script1 archive1 --pos 5 --prefix '' --expanded=true
+updated branch archive1_script1: prefix "", position 5, expanded true
+
+$ trilium branch set root_script1 --prefix x
+updated branch root_script1: prefix "x"
+
+$ trilium branch set script1 archive1
+stderr| error: nothing to change: give --prefix, --pos or --expanded
+exit: 2
+
+$ trilium branch rm script1 archive1
+removed script1 from archive1 (branch archive1_script1)
+
+$ trilium branch rm script1 root
+stderr| error: this is the only place script1 "Script.py" appears; removing it would delete the note
+stderr| hint: to delete the note use: trilium rm script1 (or add --force)
+exit: 2
+
+$ trilium branch rm script1 projects1
+stderr| error: script1 is not placed under projects1
+stderr| hint: list its placements with: trilium branch ls script1
+exit: 3
+
+$ trilium branch rm _options _hidden --force
+stderr| error: refusing to remove _options: it is a Trilium system note
+exit: 2
+
+$ trilium --json branch ls script1
+{"branchId":"root_script1","noteId":"script1","parentNoteId":"root","prefix":"x","notePosition":1,"isExpanded":false,"utcDateModified":"2026-10-25 08:00:22.000Z"}
+
+$ trilium branch
+Usage: trilium branch <command>
+
+A branch is one placement of a note in the tree; cloning adds another one.
+Branches are addressed as <note> <parent>, or by branch ID.
+
+Commands:
+  add         Clone a note into another parent
+  ls          List the places a note appears
+  rm          Remove a note from one place
+  set         Change a placement's prefix, position or expanded state
+
+Examples:
+  trilium branch ls <note>
+  trilium branch add <note> <parent>
+  trilium branch rm <note> <parent>
+
+$ trilium branch bogus
+stderr| error: unknown command "bogus" for trilium branch
+stderr| hint: run: trilium help branch
+exit: 2
+

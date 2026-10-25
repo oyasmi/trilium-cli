@@ -1,0 +1,86 @@
+$ trilium create Quick '<p>hi</p>'
+created n0006 text "Quick" in inbox1 (@inbox)
+
+$ trilium create 'Plain words' 'no tags at all' -p projects1
+created n0007 text "Plain words" in projects1
+stderr| warning: text notes store HTML; this content has no tags and will render as one paragraph. Wrap it in <p>…</p>, or create a code note (-t code) for plain text.
+
+$ trilium create -f '$DIR/hello.py' -p projects1
+created n0008 code "hello.py" in projects1
+
+$ trilium create Renamed -f '$DIR/notes.md' -p projects1 -t text
+created n0009 text "Renamed" in projects1
+stderr| warning: text notes store HTML; this content has no tags and will render as one paragraph. Wrap it in <p>…</p>, or create a code note (-t code) for plain text.
+
+$ trilium create -f '$DIR/red.png' -p projects1
+created n0010 image "red.png" in projects1
+
+$ trilium create lib.go -t code -p projects1
+created n0011 code "lib.go" in projects1
+
+$ trilium create Todo -t search '#status=todo' -p projects1
+created n0012 search "Todo" in projects1
+
+$ trilium create Tagged -p projects1 -a '#status=new' -a '~seeAlso=meeting1' -a '#title="a b"'
+created n0014 text "Tagged" in projects1
+
+$ trilium create Fixed -p projects1 --id myFixedId1 --pos 5
+created myFixedId1 text "Fixed" in projects1
+
+$ trilium create Fixed -p projects1 --id myFixedId1
+stderr| error: Note 'myFixedId1' already exists. [NOTE_ALREADY_EXISTS]
+exit: 1
+
+$ trilium create 'Stdin note' -f - -p projects1
+created n0018 text "Stdin note" in projects1
+
+$ trilium create 'Stdin note' -f - -p projects1
+created n0019 text "Stdin note" in projects1
+
+$ trilium get n0012 -m
+---
+id: n0012
+title: Todo
+type: search
+parents: projects1
+attrs: #searchString=#status=todo
+children: 0
+attachments: 0
+created: 2026-10-25 16:00
+modified: 2026-10-25 16:00
+---
+
+$ trilium get n0014 -m
+---
+id: n0014
+title: Tagged
+type: text (text/html)
+parents: projects1
+attrs: #status=new ~seeAlso=meeting1 #title="a b"
+children: 0
+attachments: 0
+created: 2026-10-25 16:00
+modified: 2026-10-25 16:00
+---
+
+$ trilium create Bad -a '#bad name'
+stderr| error: invalid attribute "#bad name": names may only contain letters, digits, '_' and ':'
+stderr| hint: examples: '#status=done'  '+#tag=x'  '-#todo'  '~seeAlso=<note>'
+exit: 2
+
+$ trilium create Bad -a '-#x'
+stderr| error: -a -#x: a new note has no attributes to remove
+exit: 2
+
+$ trilium create Two x -f '$DIR/hello.py'
+stderr| error: give the content only one way: as an argument, with -f FILE, or with -f - (stdin)
+exit: 2
+
+$ trilium create
+stderr| error: a title is required (or use -f FILE)
+stderr| hint: usage: trilium create <title> [content]
+exit: 2
+
+$ trilium --json create 'By agent' '<p>x</p>' -p projects1
+{"noteId":"n0020","isProtected":false,"title":"By agent","type":"text","mime":"text/html","blobId":"b48297810526626fa","utcDateCreated":"2026-10-25 08:00:43.000Z","utcDateModified":"2026-10-25 08:00:43.000Z","parentNoteIds":["projects1"],"childNoteIds":[],"parentBranchIds":["projects1_n0020"],"childBranchIds":[],"attributes":[{"attributeId":"a0001","noteId":"projects1","type":"label","name":"project","value":"etapi","position":10,"isInheritable":true},{"attributeId":"a0021","noteId":"n0020","type":"label","name":"agent","value":"claude-1","position":10,"isInheritable":false,"utcDateModified":"2026-10-25 08:00:45.000Z"}]}
+

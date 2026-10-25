@@ -1,0 +1,27 @@
+$ trilium ls
+stderr| error: TRILIUM_ETAPI_TOKEN is not set.
+stderr| hint: In Trilium, open Options → ETAPI and create a token, then:
+stderr|       export TRILIUM_ETAPI_TOKEN=<your token>
+exit: 2
+
+$ trilium ls
+stderr| error: TRILIUM_URL is not set.
+stderr| hint: Set it to your Trilium server address, e.g.:
+stderr|       export TRILIUM_URL=https://notes.example.com
+exit: 2
+
+$ trilium ls
+stderr| error: TRILIUM_URL is not a valid http(s) address: "notes.example.com"
+stderr| hint: Use the address you open Trilium with, e.g.:
+stderr|       export TRILIUM_URL=https://notes.example.com
+exit: 2
+
+$ trilium ls
+stderr| error: Not authenticated [NOT_AUTHENTICATED]
+stderr| hint: check TRILIUM_ETAPI_TOKEN; tokens are created in Trilium under Options → ETAPI
+exit: 1
+
+$ trilium --json ls
+stderr| {"error":{"status":401,"code":"NOT_AUTHENTICATED","message":"Not authenticated"},"hint":"check TRILIUM_ETAPI_TOKEN; tokens are created in Trilium under Options → ETAPI"}
+exit: 1
+

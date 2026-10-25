@@ -1,0 +1,47 @@
+$ trilium ls
+projects1	book	Projects	+3
+inbox1	text	Inbox
+
+$ trilium ls --all
+_hidden	doc	Hidden Notes	+1
+projects1	book	Projects	+3
+inbox1	text	Inbox
+
+$ trilium ls projects1 -l
+meeting1	text	text/html	2026-10-25 16:00	Meeting notes	+1
+script1	code	text/x-python	2026-10-25 16:00	Script.py
+old1	text	text/html	2026-10-25 16:00	Old	(archived)
+
+$ trilium ls projects1 -d 3
+meeting1	text	Meeting notes	+1
+  child1	text	Child	+1
+    grandchild1	text	Grandchild
+script1	code	Script.py
+old1	text	Old	(archived)
+
+$ trilium ls projects1 -d 2 -n 3
+meeting1	text	Meeting notes	+1
+  child1	text	Child	+1
+script1	code	Script.py
+stderr| 3 shown; 1 more (use -n)
+
+$ trilium ls _hidden
+_options	book	Options
+
+$ trilium ls script1
+stderr| no matches
+
+$ trilium ls missing1
+stderr| error: Note 'missing1' not found. [NOTE_NOT_FOUND]
+stderr| hint: find note IDs with: trilium search <words>
+exit: 3
+
+$ trilium ls projects1 -d 0
+stderr| error: -d must be 1 or more
+exit: 2
+
+$ trilium --json ls projects1 -d 2 -n 2
+{"noteId":"meeting1","isProtected":false,"title":"Meeting notes","type":"text","mime":"text/html","blobId":"bdce3f9a189a2233f","utcDateCreated":"2026-10-25 08:00:08.000Z","utcDateModified":"2026-10-25 08:00:08.000Z","parentNoteIds":["projects1"],"childNoteIds":["child1"],"parentBranchIds":["projects1_meeting1"],"childBranchIds":["meeting1_child1"],"attributes":[{"attributeId":"a0002","noteId":"meeting1","type":"label","name":"status","value":"draft","position":10,"isInheritable":false},{"attributeId":"a0003","noteId":"meeting1","type":"relation","name":"seeAlso","value":"script1","position":20,"isInheritable":false},{"attributeId":"a0001","noteId":"projects1","type":"label","name":"project","value":"etapi","position":10,"isInheritable":true}],"depth":1}
+{"noteId":"child1","isProtected":false,"title":"Child","type":"text","mime":"text/html","blobId":"b14650fb0739d0383","utcDateCreated":"2026-10-25 08:00:16.000Z","utcDateModified":"2026-10-25 08:00:16.000Z","parentNoteIds":["meeting1"],"childNoteIds":["grandchild1"],"parentBranchIds":["meeting1_child1"],"childBranchIds":["child1_grandchild1"],"attributes":[{"attributeId":"a0001","noteId":"projects1","type":"label","name":"project","value":"etapi","position":10,"isInheritable":true}],"depth":2}
+stderr| 2 shown; 2 more (use -n)
+

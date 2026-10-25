@@ -1,0 +1,118 @@
+$ trilium get meeting1
+---
+id: meeting1
+title: Meeting notes
+type: text (text/html)
+parents: projects1
+attrs: #status=draft ~seeAlso=script1
+children: 0
+attachments: 1
+created: 2026-10-25 16:00
+modified: 2026-10-25 16:00
+---
+<h2>Agenda</h2><p>Budget review</p><ul><li>one</li><li>two</li></ul>
+
+$ trilium get meeting1 --all-attrs --text
+---
+id: meeting1
+title: Meeting notes
+type: text (text/html)
+parents: projects1
+attrs: #status=draft ~seeAlso=script1
+inherited: #project=etapi (from projects1)
+children: 0
+attachments: 1
+created: 2026-10-25 16:00
+modified: 2026-10-25 16:00
+content: plain-text view (read-only; not the stored HTML)
+---
+Agenda
+
+Budget review
+- one
+- two
+
+$ trilium get meeting1 script1 -m
+---
+id: meeting1
+title: Meeting notes
+type: text (text/html)
+parents: projects1
+attrs: #status=draft ~seeAlso=script1
+children: 0
+attachments: 1
+created: 2026-10-25 16:00
+modified: 2026-10-25 16:00
+---
+
+---
+id: script1
+title: Script.py
+type: code (text/x-python)
+parents: projects1
+children: 0
+attachments: 0
+created: 2026-10-25 16:00
+modified: 2026-10-25 16:00
+---
+
+$ trilium get script1 -c
+print('hi')
+
+$ trilium get img1
+---
+id: img1
+title: red.png
+type: image (image/png)
+parents: projects1
+children: 0
+attachments: 0
+created: 2026-10-25 16:00
+modified: 2026-10-25 16:00
+content: binary (image/png), save with: trilium get img1 -o <file>
+---
+
+$ trilium get img1 -c
+stderr| error: img1 has binary content (image/png) and can't be printed
+stderr| hint: save it with: trilium get img1 -o <file>
+exit: 1
+
+$ trilium get img1 -o out.png
+saved img1 to out.png (6 bytes)
+
+$ trilium get script1 -o -
+print('hi')
+
+$ trilium get meeting1 -c -m
+stderr| error: -c and -m can't be used together
+stderr| hint: see: trilium help get
+exit: 2
+
+$ trilium get meeting1 script1 -o x
+stderr| error: -o works with exactly one note
+exit: 2
+
+$ trilium get missing1
+stderr| error: Note 'missing1' not found. [NOTE_NOT_FOUND]
+stderr| hint: find note IDs with: trilium search <words>
+exit: 3
+
+$ trilium get @inbox -m
+---
+id: inbox1
+title: Inbox
+type: text (text/html)
+parents: root
+attrs: #inbox
+children: 0
+attachments: 0
+created: 2026-10-25 16:00
+modified: 2026-10-25 16:00
+---
+
+$ trilium --json get meeting1 --text
+{"noteId":"meeting1","isProtected":false,"title":"Meeting notes","type":"text","mime":"text/html","blobId":"bdce3f9a189a2233f","utcDateCreated":"2026-10-25 08:00:08.000Z","utcDateModified":"2026-10-25 08:00:08.000Z","parentNoteIds":["projects1"],"childNoteIds":[],"parentBranchIds":["projects1_meeting1"],"childBranchIds":[],"attributes":[{"attributeId":"a0002","noteId":"meeting1","type":"label","name":"status","value":"draft","position":10,"isInheritable":false},{"attributeId":"a0003","noteId":"meeting1","type":"relation","name":"seeAlso","value":"script1","position":20,"isInheritable":false},{"attributeId":"a0001","noteId":"projects1","type":"label","name":"project","value":"etapi","position":10,"isInheritable":true}],"content":"Agenda\n\nBudget review\n- one\n- two\n","contentView":"text","attachments":[{"attachmentId":"att0006","ownerId":"meeting1","role":"image","mime":"image/png","title":"chart.png","position":10,"contentLength":4}]}
+
+$ trilium --json get img1
+{"noteId":"img1","isProtected":false,"title":"red.png","type":"image","mime":"image/png","blobId":"b339a6ae46d2d3806","utcDateCreated":"2026-10-25 08:00:16.000Z","utcDateModified":"2026-10-25 08:00:16.000Z","parentNoteIds":["projects1"],"childNoteIds":[],"parentBranchIds":["projects1_img1"],"childBranchIds":[],"attributes":[{"attributeId":"a0001","noteId":"projects1","type":"label","name":"project","value":"etapi","position":10,"isInheritable":true}],"attachments":[]}
+

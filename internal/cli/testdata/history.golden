@@ -1,0 +1,31 @@
+$ trilium rm meeting1
+deleted meeting1 "Meeting notes" (undo: trilium undelete meeting1)
+
+$ trilium history -n 3
+2026-10-25 16:00	meeting1	Meeting notes	deleted	(can undelete)
+2026-10-25 16:00	inbox1	Inbox
+2026-10-25 16:00	old1	Old
+stderr| 3 shown; more available (use -n)
+
+$ trilium history --in projects1 -n 0
+2026-10-25 16:00	meeting1	Meeting notes	deleted	(can undelete)
+2026-10-25 16:00	inbox1	Inbox
+2026-10-25 16:00	old1	Old
+2026-10-25 16:00	script1	Script.py
+2026-10-25 16:00	meeting1	Meeting notes
+2026-10-25 16:00	projects1	Projects
+2026-10-25 16:00	_options	Options
+2026-10-25 16:00	_hidden	Hidden Notes
+2026-10-25 16:00	root	root
+
+$ trilium undelete meeting1
+restored meeting1 "Meeting notes"
+
+$ trilium undelete meeting1
+stderr| error: Note 'meeting1' is not deleted. [NOTE_NOT_DELETED]
+exit: 1
+
+$ trilium undelete 'bad id'
+stderr| error: invalid note ID "bad id"
+exit: 2
+

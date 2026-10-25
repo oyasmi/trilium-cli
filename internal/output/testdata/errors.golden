@@ -1,0 +1,42 @@
+[3] error: Note 'abc' not found. [NOTE_NOT_FOUND]
+hint: find note IDs with: trilium search <words>
+[3] {"error":{"status":404,"code":"NOTE_NOT_FOUND","message":"Note 'abc' not found."},"hint":"find note IDs with: trilium search <words>"}
+[3] error: Attachment 'x' not found. [ATTACHMENT_NOT_FOUND]
+hint: list a note's attachments with: trilium att ls <note>
+[3] {"error":{"status":404,"code":"ATTACHMENT_NOT_FOUND","message":"Attachment 'x' not found."},"hint":"list a note's attachments with: trilium att ls <note>"}
+[1] error: Not authenticated [NOT_AUTHENTICATED]
+hint: check TRILIUM_ETAPI_TOKEN; tokens are created in Trilium under Options → ETAPI
+[1] {"error":{"status":401,"code":"NOT_AUTHENTICATED","message":"Not authenticated"},"hint":"check TRILIUM_ETAPI_TOKEN; tokens are created in Trilium under Options → ETAPI"}
+[1] error: Note 'p' is protected [NOTE_IS_PROTECTED]
+hint: protected notes can't be read or changed through ETAPI
+[1] {"error":{"status":400,"code":"NOTE_IS_PROTECTED","message":"Note 'p' is protected"},"hint":"protected notes can't be read or changed through ETAPI"}
+[1] error: HTTP 429 from server
+hint: too many failed attempts; wait a few minutes
+[1] {"error":{"status":429,"message":"HTTP 429 from server"},"hint":"too many failed attempts; wait a few minutes"}
+[1] error: HTTP 502 from server
+[1] {"error":{"status":502,"message":"HTTP 502 from server"}}
+[1] error: dial tcp: connection refused
+hint: could not reach TRILIUM_URL (https://notes.example.com)
+[1] {"error":{"message":"dial tcp: connection refused"},"hint":"could not reach TRILIUM_URL (https://notes.example.com)"}
+[2] error: TRILIUM_URL is not set.
+hint: Set it
+[2] {"error":{"message":"TRILIUM_URL is not set."},"hint":"Set it"}
+[2] error: invalid note reference "@nope": unknown shortcut; use @inbox, @today, @yesterday, @tomorrow, @YYYY-MM-DD, @YYYY-Www, @YYYY-MM or @YYYY
+[2] {"error":{"message":"invalid note reference \"@nope\": unknown shortcut; use @inbox, @today, @yesterday, @tomorrow, @YYYY-MM-DD, @YYYY-Www, @YYYY-MM or @YYYY"}}
+[2] error: invalid attribute "bad": must start with "#" (label) or "~" (relation), optionally prefixed by "+" or "-"
+hint: examples: '#status=done'  '+#tag=x'  '-#todo'  '~seeAlso=<note>'
+[2] {"error":{"message":"invalid attribute \"bad\": must start with \"#\" (label) or \"~\" (relation), optionally prefixed by \"+\" or \"-\""},"hint":"examples: '#status=done'  '+#tag=x'  '-#todo'  '~seeAlso=<note>'"}
+[2] error: give the content only one way: as an argument, with -f FILE, or with -f - (stdin)
+[2] {"error":{"message":"give the content only one way: as an argument, with -f FILE, or with -f - (stdin)"}}
+[2] error: -c and -m can't be used together
+hint: see: trilium help get
+[2] {"error":{"message":"-c and -m can't be used together"},"hint":"see: trilium help get"}
+[1] error: no match for --old #1
+[1] {"error":{"message":"no match for --old #1"}}
+[3] error: nothing
+hint: find note IDs with: trilium search <words>
+[3] {"error":{"message":"nothing"},"hint":"find note IDs with: trilium search <words>"}
+[1] error: the server did not answer in time
+[1] {"error":{"message":"the server did not answer in time"}}
+[1] error: plain
+[1] {"error":{"message":"plain"}}

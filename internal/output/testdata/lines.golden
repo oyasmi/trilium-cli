@@ -1,0 +1,14 @@
+tText01	text	会议纪要	+3
+tText01	text	text/html	2026-10-25 16:57	会议纪要	+3
+bk1	book	Folder	(archived)
+bk1	book	-	2026-01-01 08:00	Folder	(archived)
+root	text	root	+1
+root	text	-	-	root	+1
+_hidden	doc	Hidden	+2
+_hidden	doc	-	-	Hidden	+2
+tText01	text	会议纪要	+3
+    bk1	book	Folder	(archived)
+a1	#status=published
+a2	#todo
+a3	~seeAlso=tCodePy01
+a4	#project=etapi	(from etapiSandbox01)

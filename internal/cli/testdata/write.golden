@@ -1,0 +1,87 @@
+$ trilium append meeting1 '<p>Action items</p>'
+appended meeting1 +19 bytes: 68 → 87 bytes
+
+$ trilium append meeting1 -f '$DIR/more.html' --top
+appended meeting1 +11 bytes: 87 → 98 bytes
+
+$ trilium append script1 'print('\''bye'\'')'
+appended script1 +12 bytes: 12 → 24 bytes
+
+$ trilium append script1 '# header' --top
+appended script1 +9 bytes: 24 → 33 bytes
+
+$ trilium append meeting1
+stderr| error: no content given
+stderr| hint: give the content as an argument, with -f FILE, or with -f - (stdin), e.g.:
+stderr|       trilium append <note> "<p>text</p>"
+stderr|       trilium append <note> -f body.html
+exit: 2
+
+$ trilium append meeting1 x -f '$DIR/more.html'
+stderr| error: give the content only one way: as an argument, with -f FILE, or with -f - (stdin)
+exit: 2
+
+$ trilium append _options '<p>x</p>'
+stderr| error: _options is a Trilium system note
+stderr| hint: add --force if you really mean to change it
+exit: 2
+
+$ trilium append img1 '<p>x</p>'
+stderr| error: img1 has binary content (image/png) and can't be edited as text
+stderr| hint: replace it with: trilium put img1 -f <file>
+exit: 1
+
+$ trilium get script1 -c
+# header
+print('hi')
+print('bye')%(no newline)
+
+$ trilium edit meeting1 --old '<p>Budget review</p>' --new '<p>Budget approved</p>' --old one --new first
+edited meeting1 2 replacements: 98 → 102 bytes
+
+$ trilium edit meeting1 --old '<li>' --new '<li>* '
+stderr| error: --old #1 matches 2 times in meeting1 (nothing was changed)
+stderr| hint: add more surrounding text to make it unique, or use --all to replace every match
+exit: 1
+
+$ trilium edit meeting1 --old '<li>' --new '<li>* ' --all
+edited meeting1 2 replacements: 102 → 106 bytes
+
+$ trilium edit meeting1 --old 'missing text' --new x --old Agenda --new Plan
+stderr| error: --old #1 not found in meeting1 (nothing was changed)
+stderr| hint: text must match exactly; text notes are raw HTML. View it with: trilium get -c meeting1
+exit: 1
+
+$ trilium edit meeting1 --old Agenda
+stderr| error: got 1 --old and 0 --new
+stderr| hint: pair every --old with a --new (use --new "" to delete)
+exit: 2
+
+$ trilium edit meeting1 --old '' --new x
+stderr| error: --old #1 is empty; there is nothing to find
+exit: 2
+
+$ trilium edit meeting1
+stderr| error: nothing to replace: give --old and --new
+stderr| hint: example: trilium edit <note> --old "<p>a</p>" --new "<p>b</p>"
+exit: 2
+
+$ trilium edit meeting1 --old-file '$DIR/old.txt' --new-file '$DIR/new.txt'
+edited meeting1 1 replacement: 106 → 104 bytes
+
+$ trilium get meeting1 -c
+<p>more</p><h2>Plan</h2><p>Budget approved</p><ul><li>* first</li><li>* two</li></ul><p>Action items</p>%(no newline)
+
+$ trilium put meeting1 '<p>replaced</p>'
+updated meeting1 content: 104 → 15 bytes
+
+$ trilium put meeting1 'replaced without tags'
+updated meeting1 content: 15 → 21 bytes
+stderr| warning: text notes store HTML; this content has no tags and will render as one paragraph. Wrap it in <p>…</p>, or create a code note (-t code) for plain text.
+
+$ trilium --json put script1 -f '$DIR/s.py'
+{"noteId":"script1","bytesBefore":33,"bytesAfter":5}
+
+$ trilium --json edit script1 --old pass --new return
+{"noteId":"script1","bytesBefore":5,"bytesAfter":7,"replacements":1}
+

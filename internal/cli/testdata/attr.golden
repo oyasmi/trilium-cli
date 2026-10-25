@@ -1,0 +1,104 @@
+$ trilium attr meeting1
+a0002	#status=draft
+a0003	~seeAlso=script1
+
+$ trilium attr meeting1 --all
+a0002	#status=draft
+a0003	~seeAlso=script1
+a0001	#project=etapi	(from projects1)
+
+$ trilium attr meeting1 '#status=done' '+#tag=a' '+#tag=b' '-#tag=a' '#todo'
+set #status=done on meeting1
+added #tag=a on meeting1
+added #tag=b on meeting1
+removed #tag=a from meeting1
+set #todo on meeting1
+
+$ trilium attr meeting1 '#status(inheritable)=done' '~seeAlso=root' '+~seeAlso=projects1'
+set #status(inheritable)=done on meeting1
+set ~seeAlso=root on meeting1
+added ~seeAlso=projects1 on meeting1
+
+$ trilium attr meeting1 '-~seeAlso=projects1' '#title="a b"' '-#missing'
+removed ~seeAlso=projects1 from meeting1
+set #title="a b" on meeting1
+stderr| warning: meeting1 has no #missing to remove
+
+$ trilium attr meeting1 '+#tag=c' '#tag=d'
+added #tag=c on meeting1
+set #tag=d on meeting1
+stderr| warning: meeting1 has 2 #tag attributes; changed the first one
+
+$ trilium attr meeting1
+a0007	#tag=d
+a0008	#todo
+a0009	#status(inheritable)=done
+a0010	~seeAlso=root
+a0012	#title="a b"
+a0013	#tag=c
+
+$ trilium attr meeting1 '#ok=1' '#bad name=2'
+stderr| error: invalid attribute "#bad name=2": names may only contain letters, digits, '_' and ':'
+stderr| hint: examples: '#status=done'  '+#tag=x'  '-#todo'  '~seeAlso=<note>'
+exit: 2
+
+$ trilium attr meeting1 '~rel'
+stderr| error: invalid attribute "~rel": a relation needs a target note, e.g. ~rel=<note>
+stderr| hint: examples: '#status=done'  '+#tag=x'  '-#todo'  '~seeAlso=<note>'
+exit: 2
+
+$ trilium attr meeting1 '~rel=missing1'
+stderr| error: Note 'missing1' not found. [NOTE_NOT_FOUND]
+stderr| hint: find note IDs with: trilium search <words>
+exit: 3
+
+$ trilium attr meeting1 --bogus
+stderr| error: unknown flag: --bogus
+stderr| hint: see: trilium help attr
+exit: 2
+
+$ trilium attr _options '#x'
+stderr| error: _options is a Trilium system note
+stderr| hint: add --force if you really mean to change it
+exit: 2
+
+$ trilium attr _options '#x' --force
+set #x on _options
+
+$ trilium attr script1
+stderr| no attributes
+
+$ trilium attr meeting1 -- '-#todo'
+removed #todo from meeting1
+
+$ trilium --json attr meeting1 '#status=final' '-#tag'
+{"attributeId":"a0015","noteId":"meeting1","type":"label","name":"status","value":"final","position":50,"isInheritable":false,"utcDateModified":"2026-10-25 08:00:25.000Z"}
+{"attributeId":"a0007","noteId":"meeting1","type":"label","name":"tag","value":"d","position":40,"isInheritable":false,"utcDateModified":"2026-10-25 08:00:17.000Z","removed":true}
+{"attributeId":"a0013","noteId":"meeting1","type":"label","name":"tag","value":"c","position":60,"isInheritable":false,"utcDateModified":"2026-10-25 08:00:23.000Z","removed":true}
+
+$ trilium attr
+stderr| error: trilium attr: missing arguments
+stderr| hint: usage: trilium attr <note> [ops...]   (more: trilium help attr)
+exit: 2
+
+$ trilium attr --help
+Usage: trilium attr <note> [ops...]
+
+Without ops, list the note's own attributes (--all adds inherited ones).
+Ops use Trilium's notation; quote them for the shell:
+  #name=value   set a label (changes the existing one, or adds it)
+  +#name=value  add another label with the same name
+  -#name        remove all such labels      -#name=value  remove just that one
+  ~name=<note>  set a relation (also +~ and -~)
+  #name(inheritable)=value   make it inheritable
+Values with spaces can be quoted: '#title="a b"'.
+
+Flags:
+      --all     also list inherited attributes
+      --force   allow changing Trilium system notes
+
+Examples:
+  trilium attr <id>
+  trilium attr <id> '#status=done' '-#todo' '~seeAlso=<other-id>'
+  trilium attr <id> '+#tag=urgent'
+

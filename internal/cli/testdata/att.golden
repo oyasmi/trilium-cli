@@ -1,0 +1,66 @@
+$ trilium att ls meeting1
+stderr| no attachments
+
+$ trilium att add meeting1 -f '$DIR/red.png'
+added attachment att0006 to meeting1: "red.png" image/png 20 bytes
+embed: <img src="api/attachments/att0006/image/red.png">
+
+$ trilium att add meeting1 -f '$DIR/data.csv'
+added attachment att0007 to meeting1: "data.csv" text/csv 8 bytes
+
+$ trilium att add meeting1 hello --title hello.txt
+added attachment att0008 to meeting1: "hello.txt" text/plain 5 bytes
+
+$ trilium att add meeting1 hello
+stderr| error: --title is required unless the content comes from -f FILE
+stderr| hint: example: trilium att add <note> "text" --title notes.txt
+exit: 2
+
+$ trilium att ls meeting1
+att0006	image	image/png	20	red.png
+att0007	file	text/csv	8	data.csv
+att0008	file	text/plain	5	hello.txt
+
+$ trilium att get att0006
+stderr| error: attachment att0006 is binary (image/png) and can't be printed
+stderr| hint: save it with: trilium att get att0006 -o <file>
+exit: 1
+
+$ trilium att get att0006 -o copy.png
+saved att0006 to copy.png (20 bytes)
+
+$ trilium att get att0007
+a,b
+1,2
+
+$ trilium att put att0007 'x,y
+'
+updated attachment att0007 content: 8 → 4 bytes
+
+$ trilium att put att0006 -f '$DIR/red.png'
+updated attachment att0006 content: ? → 20 bytes
+
+$ trilium att update att0007 --title renamed.csv --pos 20
+updated attachment att0007 title: "data.csv" → "renamed.csv", position: 10 → 20
+
+$ trilium att update att0007
+stderr| error: nothing to update: give --title, --role, --mime or --pos
+exit: 2
+
+$ trilium att rm att0008
+deleted attachment att0008 "hello.txt" from meeting1
+
+$ trilium att get missing99
+stderr| error: Attachment 'missing99' not found. [ATTACHMENT_NOT_FOUND]
+stderr| hint: list a note's attachments with: trilium att ls <note>
+exit: 3
+
+$ trilium att get 'bad id'
+stderr| error: invalid attachment ID "bad id"
+stderr| hint: list attachment IDs with: trilium att ls <note>
+exit: 2
+
+$ trilium --json att ls meeting1
+{"attachmentId":"att0006","ownerId":"meeting1","role":"image","mime":"image/png","title":"red.png","position":10,"contentLength":20}
+{"attachmentId":"att0007","ownerId":"meeting1","role":"file","mime":"text/csv","title":"renamed.csv","position":20,"contentLength":4}
+
