@@ -5,6 +5,7 @@ from earlier output.
 
 ## Contents
 
+- Set up an inbox and icons
 - Reorganize a part of the tree
 - Add an image to a note
 - Tag a batch of notes
@@ -13,6 +14,17 @@ from earlier output.
 - Export, import and Markdown
 - Recover a deleted note
 - Several agents on one knowledge base
+
+## Set up an inbox and icons
+
+```bash
+trilium info                                  # "inbox: none" means @inbox has no target
+trilium create "Inbox" -p root -a '#inbox' -a '#iconClass=bx bx-archive-in'
+trilium attr <folder> '#iconClass=bx bx-folder'
+```
+
+The note labelled `#inbox` is where `create` puts notes by default. Icon names
+and choosing rules: [icons.md](icons.md).
 
 ## Reorganize a part of the tree
 

@@ -41,15 +41,26 @@ func parseRefs(args ...string) ([]ref.Ref, error) {
 }
 
 func (rt *Runtime) resolveRef(ctx context.Context, c *etapi.Client, r ref.Ref) (target, error) {
-	id, err := r.Resolve(ctx, c, rt.now())
+	if !r.IsAlias() {
+		return target{ID: r.Value}, nil
+	}
+	n, err := r.ResolveNote(ctx, c, rt.now())
 	if err != nil {
 		return target{}, err
 	}
-	t := target{ID: id}
-	if r.IsAlias() {
-		t.Alias = r.Raw
+	if r.Kind == ref.Inbox && !hasLabel(n, "inbox") {
+		rt.warn("no note has the label #inbox, so @inbox is %s (%s). Create one with: trilium create Inbox -p root -a '#inbox'", n.NoteID, output.Q(n.Title))
 	}
-	return t, nil
+	return target{ID: n.NoteID, Alias: r.Raw}, nil
+}
+
+func hasLabel(n *etapi.Note, name string) bool {
+	for _, a := range n.Attributes {
+		if a.Type == "label" && a.Name == name {
+			return true
+		}
+	}
+	return false
 }
 
 // resolve parses and resolves one note reference.

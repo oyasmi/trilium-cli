@@ -125,28 +125,32 @@ type Calendar interface {
 // days are computed from it. Calendar notes are created by the server when
 // they do not exist yet.
 func (r Ref) Resolve(ctx context.Context, cal Calendar, now time.Time) (string, error) {
-	var (
-		n   *etapi.Note
-		err error
-	)
-	switch r.Kind {
-	case ID:
+	if r.Kind == ID {
 		return r.Value, nil
-	case Inbox:
-		n, err = cal.Inbox(ctx, now.Format(time.DateOnly))
-	case Day:
-		n, err = cal.Day(ctx, r.date(now))
-	case Week:
-		n, err = cal.Week(ctx, r.Value)
-	case Month:
-		n, err = cal.Month(ctx, r.Value)
-	case Year:
-		n, err = cal.Year(ctx, r.Value)
 	}
+	n, err := r.ResolveNote(ctx, cal, now)
 	if err != nil {
 		return "", err
 	}
 	return n.NoteID, nil
+}
+
+// ResolveNote is like Resolve for shortcuts and returns the note the server
+// answered with. It must not be called for plain IDs (Kind ID).
+func (r Ref) ResolveNote(ctx context.Context, cal Calendar, now time.Time) (*etapi.Note, error) {
+	switch r.Kind {
+	case Inbox:
+		return cal.Inbox(ctx, now.Format(time.DateOnly))
+	case Day:
+		return cal.Day(ctx, r.date(now))
+	case Week:
+		return cal.Week(ctx, r.Value)
+	case Month:
+		return cal.Month(ctx, r.Value)
+	case Year:
+		return cal.Year(ctx, r.Value)
+	}
+	return nil, &Error{Raw: r.Raw, Reason: "not a shortcut"}
 }
 
 func (r Ref) date(now time.Time) string {

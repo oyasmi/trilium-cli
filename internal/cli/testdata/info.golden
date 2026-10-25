@@ -2,12 +2,14 @@ $ trilium info
 server:  http://trilium.test (Trilium 0.106.1)
 auth:    ok
 notes:   8 active, 0 deleted
+inbox:   inbox1 "Inbox"
 agent:   (not set)
 
 $ trilium info
 server:  http://trilium.test (Trilium 0.106.1)
 auth:    ok
 notes:   8 active, 0 deleted
+inbox:   inbox1 "Inbox"
 agent:   claude-1
 
 $ trilium backup

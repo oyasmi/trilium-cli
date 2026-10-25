@@ -77,6 +77,7 @@ go install github.com/oyasmi/trilium-cli/cmd/trilium@latest
    server:  https://notes.example.com (Trilium 0.106.1)
    auth:    ok
    notes:   424 active, 160 deleted
+   inbox:   tA1b2C3d "Inbox"
    agent:   (not set)
    ```
 
@@ -112,7 +113,7 @@ OaVTKVwlYbCb	text	Launch checklist
 J7UZ1SubYZw6	text	Supplier call
 ```
 
-Without `-p`, `create` puts new notes in your inbox (`@inbox`).
+Without `-p`, `create` puts new notes in your inbox (`@inbox`). If no note has the label `#inbox`, they go to today's journal note and `trilium` warns you; `trilium info` shows which note is your inbox.
 Run `trilium help` for the list of commands and `trilium help <command>` for details.
 
 ## Everyday use

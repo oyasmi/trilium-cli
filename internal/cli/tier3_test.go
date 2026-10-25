@@ -126,3 +126,13 @@ func TestSearchHelpMatchesSkill(t *testing.T) {
 		t.Error("skills/trilium/references/search.md must be identical to internal/cli/help/search.md")
 	}
 }
+
+func TestInboxWarning(t *testing.T) {
+	s := newSession(t)
+	s.run("info")
+	s.run("create", "Loose note", "<p>x</p>")
+	s.run("create", "Loose note", "<p>x</p>", "-p", "root")
+	seed(s)
+	s.run("create", "Filed note", "<p>x</p>")
+	s.golden("inbox-warning")
+}

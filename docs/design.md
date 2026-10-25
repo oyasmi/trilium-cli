@@ -1,7 +1,6 @@
 # trilium CLI 设计文档
 
 > 状态：v1 设计定稿（2026-10-25）
-> 配套文档：[实施计划](implementation-plan.md)
 > 适用 Trilium 版本：基于 0.106.1 实测；更老的版本可能缺少部分接口（undelete、history、revisions 列表、week note、metrics）。
 
 ---
@@ -689,7 +688,7 @@ mime 以 Trilium 源码 `packages/commons/src/lib/mime_type.ts` 为准。在 `in
 | 12 | 日历接口在没有日历根笔记时会自动在 root 下创建 "Calendar" | 在帮助和 skill 中说明；E2E 测试要清理 |
 | 13 | 服务器时区可能是 UTC，返回的 `dateCreated` 带的是服务器本地时区 | 显示时一律用 `utc*` 字段换算成本地时间 |
 | 14 | `POST /notes/{id}/revision` 返回 204，不带 ID | `rev add` 创建后再查一次 |
-| 15 | 修订版本和附件的 `contentLength` 按**字符**计算，不是字节（实测 `附件文本内容` 返回 6） | 内容类写操作的字节数由 CLI 自己按 `len([]byte)` 计算；`att ls`、`rev ls` 原样显示 `contentLength`，在帮助和 commands.md 中写明"文本内容按字符计" |
+| 15 | 修订版本和附件的 `contentLength` 按**字符**计算，不是字节（实测 `附件文本内容` 返回 6） | 内容类写操作的字节数由 CLI 自己按 `len([]byte)` 计算；`att ls`、`rev ls` 原样显示 `contentLength`，在帮助和 conventions.md 中写明"文本内容按字符计" |
 | 16 | 修改分支时 `isExpanded` 可以改（规范说只能改 prefix 和 notePosition） | `branch set --expanded` 可用 |
 | 17 | `GET /notes/history` 的 `current_isDeleted`、`current_isProtected` 是 `0`/`1` 整数，不是布尔值 | 客户端用兼容两种写法的 `etapi.Bool` 解码；`--json` 输出统一为布尔值 |
 | 18 | 笔记的 `attributes` 包含继承来的属性（`noteId` 为拥有者） | `get`、`attr` 按 `noteId` 区分自有和继承；`attr` 的修改只作用于自有属性 |
@@ -773,7 +772,7 @@ skill 和 CLI 同等重要，甚至更重要：agent 能否用好这个工具，
 skills/trilium/
 ├── SKILL.md
 └── references/
-    ├── commands.md     全部命令、参数、输出格式和退出码
+    ├── conventions.md  输出格式、错误、退出码和各命令的易错行为（参数见 --help）
     ├── search.md       搜索语法速查：全文、精确短语、标签和关系条件、note.* 属性、
     │                   父子和祖先条件、and/or/not、正则、排序和限制；
     │                   重点说明加引号的规则；每类语法配一个例子

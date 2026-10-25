@@ -38,6 +38,9 @@ Not every icon exists in every style; when in doubt use `bx bx-`.
 
 ## Known-good names (`bx bx-…`)
 
+Confirmed to render in Trilium: `archive-in`, `collection`. The rest are
+standard Boxicons v2 names, not yet checked in Trilium's tree.
+
 | Use for | Names |
 |---|---|
 | Folders, collections | `folder`, `folder-open`, `collection`, `archive`, `archive-in`, `package`, `layer` |

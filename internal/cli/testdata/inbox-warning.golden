@@ -1,0 +1,17 @@
+$ trilium info
+server:  http://trilium.test (Trilium 0.106.1)
+auth:    ok
+notes:   3 active, 0 deleted
+inbox:   none (@inbox falls back to today's day note; fix: trilium create Inbox -p root -a '#inbox')
+agent:   (not set)
+
+$ trilium create 'Loose note' '<p>x</p>'
+created n0001 text "Loose note" in root (@inbox)
+stderr| warning: no note has the label #inbox, so @inbox is root ("root"). Create one with: trilium create Inbox -p root -a '#inbox'
+
+$ trilium create 'Loose note' '<p>x</p>' -p root
+created n0002 text "Loose note" in root
+
+$ trilium create 'Filed note' '<p>x</p>'
+created n0008 text "Filed note" in inbox1 (@inbox)
+

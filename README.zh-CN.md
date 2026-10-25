@@ -69,6 +69,7 @@ go install github.com/oyasmi/trilium-cli/cmd/trilium@latest
    server:  https://notes.example.com (Trilium 0.106.1)
    auth:    ok
    notes:   424 active, 160 deleted
+   inbox:   tA1b2C3d "Inbox"
    agent:   (not set)
    ```
 

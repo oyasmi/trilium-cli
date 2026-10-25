@@ -314,9 +314,12 @@ func infoCmd(rt *Runtime) *cobra.Command {
 				m       *etapi.Metrics
 				appErr  error
 				metrErr error
+				inbox   []etapi.Note
+				inbErr  error
 			)
 			wg.Go(func() { app, appErr = c.AppInfo(ctx) })
 			wg.Go(func() { m, metrErr = c.Metrics(ctx) })
+			wg.Go(func() { inbox, inbErr = c.Search(ctx, etapi.SearchParams{Search: "#inbox", Limit: 1}) })
 			wg.Wait()
 			if appErr != nil {
 				return appErr
@@ -327,6 +330,9 @@ func infoCmd(rt *Runtime) *cobra.Command {
 				if metrErr == nil {
 					v["metrics"] = m
 				}
+				if inbErr == nil {
+					v["inbox"] = inboxID(inbox)
+				}
 				return output.JSONL(rt.Stdout, v)
 			}
 			if agent == "" {
@@ -336,10 +342,25 @@ func infoCmd(rt *Runtime) *cobra.Command {
 			if metrErr == nil {
 				notes = fmt.Sprintf("%d active, %d deleted", m.Database.ActiveNotes, m.Database.DeletedNotes)
 			}
-			rt.printf("server:  %s (Trilium %s)\nauth:    ok\nnotes:   %s\nagent:   %s\n", rt.cfg.Server, app.AppVersion, notes, agent)
+			inboxLine := "(unavailable)"
+			if inbErr == nil {
+				inboxLine = "none (@inbox falls back to today's day note; fix: trilium create Inbox -p root -a '#inbox')"
+				if len(inbox) > 0 {
+					inboxLine = inbox[0].NoteID + " " + output.Q(inbox[0].Title)
+				}
+			}
+			rt.printf("server:  %s (Trilium %s)\nauth:    ok\nnotes:   %s\ninbox:   %s\nagent:   %s\n", rt.cfg.Server, app.AppVersion, notes, inboxLine, agent)
 			return nil
 		},
 	}
+}
+
+// inboxID is the ID of the first note found, or "" (JSON: the inbox note).
+func inboxID(res []etapi.Note) string {
+	if len(res) == 0 {
+		return ""
+	}
+	return res[0].NoteID
 }
 
 var backupNameRE = regexp.MustCompile(`^[A-Za-z0-9_]{1,32}$`)
