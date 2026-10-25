@@ -157,6 +157,19 @@ ids=$(trilium ls <folder> -n 0 | cut -f1) || exit 1   # -n 0: no 100-line cap
 for id in $ids; do trilium attr "$id" '#status=triaged' || echo "failed: $id"; done
 ```
 
+## Icons
+
+A note's icon is the label `#iconClass` holding a Boxicons class string, e.g.
+`trilium attr <note> '#iconClass=bx bx-folder'` (remove with `'-#iconClass'`;
+`create … -a '#iconClass=bx bx-folder'` sets it at creation). The CLI does not
+validate it, and a name that doesn't exist (like `bx-inbox`) shows as "?" in
+the tree, so choose from the known-good list in
+[references/icons.md](references/icons.md).
+
+**When you create a note that is a folder/container, journal, template or
+reference page, give it a fitting icon**, consistent with its siblings. Leave
+ordinary leaf notes on the default icon.
+
 ## Gotchas
 
 - `search words` is full-text: it matches titles **and** content (all words
@@ -192,6 +205,8 @@ for id in $ids; do trilium attr "$id" '#status=triaged' || echo "failed: $id"; d
   Read before writing any non-trivial query.
 - [references/html.md](references/html.md): HTML for text notes (headings,
   lists, to-dos, code blocks, tables, images, links). Read before writing it.
+- [references/icons.md](references/icons.md): setting icons, known-good Boxicons
+  names, which notes deserve one. Read before setting or choosing an icon.
 - [references/workflows.md](references/workflows.md): longer recipes
   (reorganizing, batch tagging, journals, safe rewrites, export/import,
   recovering deleted notes).
