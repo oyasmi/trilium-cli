@@ -70,8 +70,9 @@ structuring or capturing anything non-trivial:
 - **Inbox** (`#inbox`) is for quick capture; the user refiles later. The
   **journal** (`@today`, day notes) is for time-bound entries; lasting
   knowledge goes in topic notes.
-- **Text notes are HTML** (rich editor). For Markdown to keep as source, make a
-  Markdown note: `trilium create doc.md -f doc.md`.
+- **Default to a text note** (HTML, rich editor). Use Markdown only for source
+  the user wants kept (`trilium create doc.md -f doc.md`), code for scripts and
+  logs, mermaid for diagrams ([choosing a type](references/trilium-way.md)).
 - Templates, collections (`-t book`) and saved searches (`-t search`) exist for
   repeated shapes, task tables and live lists. Search before you create.
 - Protected notes can't be read through the CLI; leave them alone.

@@ -56,6 +56,12 @@ Escape `<`, `>` and `&` in text as `&lt;`, `&gt;` and `&amp;`.
 <hr>
 ```
 
+Write for the editor: start sections at `<h2>` and nest `<h3>`, `<h4>` in order
+(the app builds an outline from headings), keep tables simple (no merged cells
+unless needed), and use `<figure class="table">` around every table. To-do items
+in the app can also be "doing", "maybe" or "cancelled"; write only checked and
+unchecked ones.
+
 Long HTML is best written to a file and passed with `-f`:
 `trilium create "Release plan" -f plan.html -p <parent>`.
 
@@ -90,7 +96,9 @@ embed: <img src="api/attachments/Kq9xYz1a/image/chart.png">
 
 `trilium append <note> '<p><img src="api/attachments/Kq9xYz1a/image/chart.png"></p>'`
 
-Other files (PDF, CSV …) are attachments too; they are listed with `trilium att ls <note>`.
+Trilium supports PNG, JPEG, GIF, BMP, WebP, AVIF and SVG images. Images added
+in the app are compressed; an attachment uploaded with the CLI keeps its
+original bytes. Other files (PDF, CSV …) are attachments too; they are listed with `trilium att ls <note>`.
 
 ## Links to other notes
 

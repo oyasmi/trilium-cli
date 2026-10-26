@@ -12,7 +12,7 @@ Sources are Trilium's User Guide (docs.triliumnotes.org); statements marked
 
 - Strengths and weaknesses
 - The tree, clones and archiving
-- Text, Markdown and code notes
+- Choosing a note type
 - Attributes: Trilium's metadata system
 - Inbox, journal and the calendar
 - Templates, collections and saved searches
@@ -43,24 +43,48 @@ Sources are Trilium's User Guide (docs.triliumnotes.org); statements marked
   (`search --archived` finds them) and autocomplete, and stay recoverable with
   their links. `rm` is for mistakes and junk.
 
-## Text, Markdown and code notes
+## Choosing a note type
 
-- **Text notes** are WYSIWYG: stored as HTML, edited with a rich editor. This is
-  Trilium's main format and the right choice for notes a person will read and edit
-  in the app (headings, lists, tables, callouts, images).
+**Default to a text note.** It is Trilium's main type and the one its features
+are built around: a rich editor, tables, callouts, images, reference links,
+automatic table of contents. The other types are for specific jobs.
+
+| Content | Type | Create with |
+|---|---|---|
+| Knowledge, minutes, journal entries, anything a person reads and edits in the app | **text** (HTML) | `trilium create "T" -f body.html` |
+| Markdown the user wants kept as source (README drafts, docs shared with other tools) | **Markdown** | `trilium create doc.md -f doc.md` |
+| Scripts, logs, JSON, config, plain text | **code** | `trilium create x.py -f x.py` / `-t code --mime …` |
+| A diagram described in text (flowchart, sequence, state, class) | **mermaid** | `trilium create "Flow" -t mermaid -f flow.mmd` |
+| A folder-like container, task table, board | **book** (collection) | `trilium create "Tasks" -t book` |
+| A live list from a query | **search** | `trilium create "Open" -t search '#status=todo' -p <where>` |
+| Uploaded files and images | **file**, **image** | `trilium create x.pdf -f x.pdf` |
+
+Notes on the types:
+
+- **Text** is stored as HTML. Structure it with real headings (`<h2>`, `<h3>`):
+  the app builds an outline / table of contents from them. Keep one topic per
+  note and the note moderately sized: very large text and code notes open
+  read-only in the app (threshold set in Options; `#autoReadOnlyDisabled` exempts
+  a note, `#readOnly` locks one). Use simple tables for small comparisons; for
+  many items with several fields, use child notes in a collection instead.
 - **Markdown** is a *code note with a Markdown mime* (`text/markdown`,
-  `text/x-markdown`, `text/x-gfm`). Trilium shows it as source plus live preview
-  and keeps the source byte for byte. Use it when the user gives you Markdown
-  to keep as-is or wants Markdown source. Create it with
-  `trilium create doc.md -f doc.md` or
-  `trilium create "Doc" -t code --mime text/markdown -f doc.md` (*observed*).
-- `trilium import <parent> doc.md` instead **converts** Markdown into a text
-  note (HTML); structure and whitespace may change.
-- **Code notes** hold scripts, logs, JSON and other plain text with syntax
-  highlighting. Don't put them in text notes.
-- Other types worth knowing: `book` (collection), `search` (saved search),
-  `mermaid` (diagram from text), `canvas`, `mindMap`, `file`, `image`.
-  Prefer text, code and Markdown unless the user asks for another type.
+  `text/x-markdown`, `text/x-gfm`), shown as source plus live preview, kept byte
+  for byte (*observed*: `-t code --mime text/markdown` works). It lacks the
+  editor's reference links and image handling. `trilium import <parent> doc.md`
+  does the other thing: it **converts** Markdown into a text note.
+- **Code** notes get syntax highlighting from their mime; `#tabWidth`,
+  `#indentWithTabs`, `#wrapLines` tune them.
+- **Mermaid** notes hold plain Mermaid source (*observed*: mime `text/vnd.mermaid`)
+  and render as a diagram; prefer one over ASCII art or an image. A diagram
+  can't be embedded live inside a text note by CLI; link to the mermaid note.
+- **Canvas** (Excalidraw), **mind map**, **relation map**, **geo map** keep
+  their data in app-specific formats: create or change them in the app, not by
+  hand.
+- A **saved search** is stored where you put it. In the app it defaults to the
+  day note; with the CLI you choose the parent, or set `#searchHome` on a note
+  to make it the usual place.
+- The app can convert between text and Markdown notes (to-do states carry over),
+  so the choice isn't permanent.
 
 ## Attributes: Trilium's metadata system
 
