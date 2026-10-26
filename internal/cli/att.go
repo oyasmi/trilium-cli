@@ -139,7 +139,7 @@ func attAddCmd(rt *Runtime) *cobra.Command {
 is inferred; image/* files get the role "image". For images, an "embed:" line
 shows the HTML to put into a text note.`,
 		Example: `  trilium att add <note> -f chart.png
-  trilium att add <note> "a,b\n1,2" --title data.csv`,
+  trilium att add <note> "name,qty" --title data.csv`,
 		Args: rangeArgs(1, 2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			body, _, err := rt.readContent(args, 1, file, true)

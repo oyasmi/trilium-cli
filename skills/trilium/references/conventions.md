@@ -41,7 +41,9 @@ without `-o` print raw bytes. Errors become
 Messages say so when it matters: `… the result is unknown` / `your change may
 be missing` (check with `get -c`), `the N operation(s) printed above were
 applied` (`attr`), `created <id> but …` (two-step uploads), `… the note now
-has both` (relation replacement).
+has both` (relation replacement), `the change may have been applied` (a write
+was sent and the connection then failed: check before retrying, or `create`
+duplicates).
 
 **Exit codes**: 0 success (also empty results) · 1 API/network error or failed
 operation (e.g. `edit` found no match) · 2 usage or configuration error ·
@@ -67,8 +69,8 @@ Reading is never restricted.
 `-l`: `<id>\t<type>\t<mime>\t<modified>\t<title>[\t+N][\t(archived)]`. `ls`
 indents deeper levels by two spaces and stops at 100 lines (`-n 0`: all);
 `search` stops at 20. A cut-off prints `20 shown; more available (use -n)` on
-stderr. Notes with IDs starting `_` are hidden (`ls --all` shows them). With
-`search --in`, the ancestor itself can appear in the results.
+stderr. Notes with IDs starting `_` are hidden (`ls --all` shows them). `search`
+leaves out the `--in` note itself.
 
 **get** prints a header, then the raw content (HTML for text notes):
 ```
@@ -87,7 +89,9 @@ modified: 2026-10-25 16:57
 ```
 `-c` prints only the exact stored bytes, `-m` only the header, `--text` a
 read-only plain-text view (`content: plain-text view …` in the header),
-`--all-attrs` adds inherited attributes. Several notes print several blocks.
+`--all-attrs` adds inherited attributes. Several notes print several blocks; an ID that
+fails is reported on stderr (exit code of the first failure) without hiding the
+others, and `-c` needs one note (or `--json`).
 Binary notes show `content: binary (image/png), save with: trilium get <id> -o
 <file>` and `-c` fails. Protected notes show `protected: yes` and no content.
 
@@ -110,7 +114,8 @@ deleted tA1b2C3d "Title" (+3 children; undo: trilium undelete tA1b2C3d)
   `\n` between old and new when needed. It detects most concurrent changes and
   redoes the append; a lost update is still possible (one writer per note).
 - **edit**: exact byte match on the raw content. All pairs succeed or nothing
-  is written. Pairs apply in order, so `--old A --new B --old B --new C` turns
+  is written. Pairs apply in order (inline `--old/--new` and
+  `--old-file/--new-file` can't be mixed in one call), so `--old A --new B --old B --new C` turns
   A into C. `--new ""` deletes.
   ```
   error: --old #1 not found in tA1b2C3d (nothing was changed)        (exit 1)
@@ -147,7 +152,8 @@ a note into itself or its subtree.
 
 **branch** (`ls`, `add`, `set`, `rm`): a branch is one placement of a note;
 address it as `<note> <parent>` or by branch ID (usually `<parentId>_<noteId>`).
-`add` refuses loops; `rm` refuses the last placement unless `--force`.
+`add` refuses loops; `rm` refuses the last placement unless `--force`, which
+deletes the note (with children it also needs `-r`; undo with `undelete`).
 
 **att** (`ls`, `get`, `add`, `put`, `update`, `rm`): `att add` prints
 `added attachment Kq9xYz1a to tA1b2C3d: "chart.png" image/png 80 bytes` and, for

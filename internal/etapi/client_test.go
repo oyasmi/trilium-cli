@@ -385,3 +385,27 @@ func TestBool(t *testing.T) {
 		t.Error("want error")
 	}
 }
+
+func TestNetworkErrorMaybeApplied(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		conn, _, _ := w.(http.Hijacker).Hijack()
+		_ = conn.Close() // the request arrived, the answer never will
+	}))
+	c := New(srv.URL+"/etapi", "tok", WithRetryDelay(time.Millisecond))
+	var ne *NetworkError
+
+	err := c.PutContent(t.Context(), "abcd", strings.NewReader("x"), false)
+	if !errors.As(err, &ne) || !ne.MaybeApplied {
+		t.Errorf("write dropped after sending: got %v, want MaybeApplied", err)
+	}
+	_, err = c.GetContent(t.Context(), "abcd")
+	if !errors.As(err, &ne) || ne.MaybeApplied {
+		t.Errorf("read is never 'maybe applied': got %v", err)
+	}
+
+	srv.Close() // now nothing listens: the request can't have been sent
+	err = c.PutContent(t.Context(), "abcd", strings.NewReader("x"), false)
+	if !errors.As(err, &ne) || ne.MaybeApplied {
+		t.Errorf("connection refused: got %v, want not MaybeApplied", err)
+	}
+}

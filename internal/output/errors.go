@@ -74,7 +74,11 @@ func Describe(err error) (msg, hint string, code int) {
 	case errors.As(err, &ae):
 		return describeAPI(ae)
 	case errors.As(err, &ne):
-		return ne.Err.Error(), fmt.Sprintf("could not reach TRILIUM_URL (%s)", strings.TrimSuffix(ne.URL, "/etapi")), ExitFailure
+		hint := fmt.Sprintf("could not reach TRILIUM_URL (%s)", strings.TrimSuffix(ne.URL, "/etapi"))
+		if ne.MaybeApplied {
+			hint = "the connection failed after the request was sent, so the change may have been applied; check before retrying (e.g. trilium get -c <id>)"
+		}
+		return ne.Err.Error(), hint, ExitFailure
 	case errors.As(err, &ce):
 		return ce.Msg, ce.Hint, ExitUsage
 	case errors.As(err, &re):

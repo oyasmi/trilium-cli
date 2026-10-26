@@ -30,7 +30,7 @@ type Runtime struct {
 	Commit  string
 	// HTTPOptions are extra options for the ETAPI client (tests use them).
 	HTTPOptions []etapi.Option
-	// WriteFile and ReadFile are used for -o and -f.
+	// WriteFile is used for -o.
 	WriteFile func(name string, data []byte) error
 
 	JSON   bool
@@ -141,7 +141,11 @@ func NewRoot(rt *Runtime) *cobra.Command {
 	root.SetOut(rt.Stdout)
 	root.SetErr(rt.Stderr)
 	root.SetFlagErrorFunc(func(cmd *cobra.Command, err error) error {
-		return output.Usage("see: trilium help "+helpPath(cmd), "%v", err)
+		hint := "see: trilium help " + helpPath(cmd)
+		if strings.HasPrefix(err.Error(), "unknown shorthand flag") || strings.HasPrefix(err.Error(), "bad flag syntax") {
+			hint += `. Text starting with "-" is read as a flag: put "--" before it, or use -f FILE`
+		}
+		return output.Usage(hint, "%v", err)
 	})
 	root.CompletionOptions.DisableDefaultCmd = true
 
@@ -226,17 +230,17 @@ func Execute(ctx context.Context, rt *Runtime, args []string) int {
 	if isCobraUsage(err) {
 		err = output.Usage("run: trilium help", "%v", err)
 	}
-	var (
-		text string
-		code int
-	)
-	if rt.JSON {
-		text, code = output.ErrorJSON(err)
-	} else {
-		text, code = output.ErrorText(err)
-	}
+	text, code := errText(rt, err)
 	fmt.Fprint(rt.Stderr, text)
 	return code
+}
+
+// errText renders err for stderr in the current output mode.
+func errText(rt *Runtime, err error) (string, int) {
+	if rt.JSON {
+		return output.ErrorJSON(err)
+	}
+	return output.ErrorText(err)
 }
 
 // isCobraUsage detects errors cobra raises for unknown commands.

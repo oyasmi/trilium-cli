@@ -76,6 +76,9 @@ func collectReplacements(olds, news, oldFiles, newFiles []string) ([]replacement
 	if len(oldFiles) != len(newFiles) {
 		return nil, output.Usage("", "got %d --old-file and %d --new-file", len(oldFiles), len(newFiles))
 	}
+	if len(olds) > 0 && len(oldFiles) > 0 {
+		return nil, output.Usage("use either --old/--new or --old-file/--new-file in one call", "can't mix --old/--new with --old-file/--new-file: pairs are applied in order")
+	}
 	if len(olds)+len(oldFiles) == 0 {
 		return nil, output.Usage("example: trilium edit <note> --old \"<p>a</p>\" --new \"<p>b</p>\"", "nothing to replace: give --old and --new")
 	}

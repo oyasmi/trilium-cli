@@ -58,8 +58,7 @@ To place it in the middle of the note, use `edit` with an `--old` anchor and a
 ## Tag a batch of notes
 
 ```bash
-trilium search 'note.title *=* invoice' --in <finance> -n 0
-ids=$(trilium search 'note.title *=* invoice' --in <finance> -n 0 | cut -f1) || exit 1
+ids=$(trilium search 'note.title *=* invoice' --in <finance> -n 0 | cut -f1)
 for id in $ids; do
   trilium attr "$id" '#status=paid' '-#todo' || echo "failed: $id"
 done

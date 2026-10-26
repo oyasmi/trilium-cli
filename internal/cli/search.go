@@ -55,11 +55,14 @@ Full syntax: trilium help search`,
 			}
 			notes := make([]etapi.Note, 0, len(res))
 			for _, n := range res {
-				if !output.IsSystemID(n.NoteID) {
+				// The server returns the --in note itself, and hidden-subtree notes.
+				if !output.IsSystemID(n.NoteID) && n.NoteID != p.AncestorNoteID {
 					notes = append(notes, n)
 				}
 			}
-			more := false
+			// The server stopped at its limit: there may be more even if
+			// filtering left fewer rows than that.
+			more := limit > 0 && len(res) >= p.Limit
 			if limit > 0 && len(notes) > limit {
 				notes, more = notes[:limit], true
 			}

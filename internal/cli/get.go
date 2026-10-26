@@ -61,22 +61,37 @@ notes). Binary content is never printed; save it with -o FILE.
 			if err != nil {
 				return err
 			}
+			if o.contentOnly && len(args) > 1 && !rt.JSON {
+				return output.Usage("use --json, or read one note at a time", "-c can't separate the content of several notes")
+			}
 			results := fetchNotes(cmd.Context(), c, ts, o)
+			// One bad ID must not hide the others: print what was fetched,
+			// report each failure on stderr, and exit with the first error.
+			var firstErr error
+			printed := 0
 			for i, r := range results {
+				if r.err == nil && o.out == "" {
+					if printed > 0 && !rt.JSON {
+						rt.println("")
+					}
+					if r.err = printNote(rt, r, o); r.err == nil {
+						printed++
+					}
+				}
 				if r.err != nil {
-					return r.err
+					if firstErr == nil {
+						firstErr = r.err
+					} else {
+						text, _ := errText(rt, r.err)
+						fmt.Fprint(rt.Stderr, text)
+					}
+					continue
 				}
 				if o.out != "" {
 					return saveContent(rt, ts[i].ID, o.out, r)
 				}
-				if i > 0 && !rt.JSON {
-					rt.println("")
-				}
-				if err := printNote(rt, r, o); err != nil {
-					return err
-				}
 			}
-			return nil
+			return firstErr
 		},
 	}
 	f := cmd.Flags()

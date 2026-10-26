@@ -7,12 +7,12 @@ meeting1	text	text/html	2026-10-25 16:00	Meeting notes
 $ trilium search '#project' --in projects1
 meeting1	text	Meeting notes
 old1	text	Old	(archived)
-projects1	book	Projects	+3
 script1	code	Script.py
 
 $ trilium search note.noteId '!=' '""' -n 2
 inbox1	text	Inbox
 meeting1	text	Meeting notes
+stderr| 2 shown; more available (use -n)
 
 $ trilium search hidden
 stderr| no matches

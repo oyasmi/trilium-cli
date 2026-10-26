@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"strings"
@@ -43,7 +44,7 @@ func New(baseURL, token string, opts ...Option) *Client {
 	c := &Client{
 		base:       strings.TrimRight(baseURL, "/"),
 		token:      token,
-		http:       &http.Client{Timeout: 30 * time.Second},
+		http:       defaultHTTPClient(),
 		userAgent:  "trilium-cli/dev",
 		retries:    2,
 		retryDelay: 400 * time.Millisecond,
@@ -52,6 +53,16 @@ func New(baseURL, token string, opts ...Option) *Client {
 		o(c)
 	}
 	return c
+}
+
+// defaultHTTPClient bounds connecting and waiting for the response headers
+// instead of the whole exchange, so that a large export, import or upload
+// is not cut off while data is still flowing.
+func defaultHTTPClient() *http.Client {
+	t := http.DefaultTransport.(*http.Transport).Clone()
+	t.ResponseHeaderTimeout = 2 * time.Minute
+	t.TLSHandshakeTimeout = 30 * time.Second
+	return &http.Client{Transport: t}
 }
 
 // BaseURL returns the normalized ETAPI base URL.
@@ -78,6 +89,9 @@ func (e *Error) NotFound() bool { return strings.HasSuffix(e.Code, "_NOT_FOUND")
 type NetworkError struct {
 	URL string
 	Err error
+	// MaybeApplied is set for a write whose request may have reached the
+	// server (the connection was made, then broke or timed out).
+	MaybeApplied bool
 }
 
 func (e *NetworkError) Error() string { return fmt.Sprintf("could not reach %s: %v", e.URL, e.Err) }
@@ -123,6 +137,13 @@ func (c *Client) do(ctx context.Context, r request) (int, []byte, error) {
 	return 0, nil, lastErr
 }
 
+// isDialError reports whether the connection was never made, so the
+// request cannot have reached the server.
+func isDialError(err error) bool {
+	var oe *net.OpError
+	return errors.As(err, &oe) && oe.Op == "dial"
+}
+
 func retryable(err error) bool {
 	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 		return false
@@ -156,7 +177,7 @@ func (c *Client) once(ctx context.Context, r request, u string) (int, []byte, er
 		if ctx.Err() != nil {
 			return 0, nil, ctx.Err()
 		}
-		return 0, nil, &NetworkError{URL: c.base, Err: err}
+		return 0, nil, &NetworkError{URL: c.base, Err: err, MaybeApplied: r.method != http.MethodGet && !isDialError(err)}
 	}
 	defer func() { _ = resp.Body.Close() }()
 	var rd io.Reader = resp.Body
@@ -171,7 +192,7 @@ func (c *Client) once(ctx context.Context, r request, u string) (int, []byte, er
 	}
 	body, err := io.ReadAll(rd)
 	if err != nil {
-		return 0, nil, &NetworkError{URL: c.base, Err: err}
+		return 0, nil, &NetworkError{URL: c.base, Err: err, MaybeApplied: r.method != http.MethodGet}
 	}
 	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
 		return resp.StatusCode, body, nil

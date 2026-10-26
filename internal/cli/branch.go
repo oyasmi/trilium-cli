@@ -291,13 +291,13 @@ func branchSetCmd(rt *Runtime) *cobra.Command {
 }
 
 func branchRmCmd(rt *Runtime) *cobra.Command {
-	var force bool
+	var force, recursive bool
 	cmd := &cobra.Command{
 		Use:   "rm (<note> <parent> | <branchId>)",
 		Short: "Remove a note from one place",
 		Long: `Remove one placement of a note. The note stays in its other places.
-Removing its last placement would delete the note; that needs --force
-(or use: trilium rm).`,
+Removing its last placement would delete the note and its subtree; that
+needs --force (and -r when it has children), or use: trilium rm.`,
 		Example: "  trilium branch rm <note> <parent>",
 		Args:    rangeArgs(1, 2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -313,16 +313,29 @@ Removing its last placement would delete the note; that needs --force
 			if err != nil {
 				return err
 			}
-			if len(n.ParentBranchIDs) <= 1 && !force {
+			last := len(n.ParentBranchIDs) <= 1
+			if last && !force {
 				return output.Usage("to delete the note use: trilium rm "+n.NoteID+" (or add --force)",
 					"this is the only place %s %s appears; removing it would delete the note", n.NoteID, output.Q(n.Title))
 			}
+			if k := len(n.ChildNoteIDs); last && k > 0 && !recursive {
+				return output.Usage("add -r to delete the whole subtree",
+					"%s %s has %s; removing its last placement deletes them too", n.NoteID, output.Q(n.Title), plural(k, "child", "children"))
+			}
 			if err := c.DeleteBranch(ctx, b.BranchID); err != nil {
 				return err
+			}
+			if last {
+				extra := ""
+				if k := len(n.ChildNoteIDs); k > 0 {
+					extra = fmt.Sprintf("+%s; ", plural(k, "child", "children"))
+				}
+				return rt.emit(b, fmt.Sprintf("deleted %s %s (last placement; %sundo: trilium undelete %s)", n.NoteID, output.Q(n.Title), extra, n.NoteID))
 			}
 			return rt.emit(b, fmt.Sprintf("removed %s from %s (branch %s)", b.NoteID, b.ParentNoteID, b.BranchID))
 		},
 	}
 	cmd.Flags().BoolVar(&force, "force", false, "allow removing the last placement (deletes the note)")
+	cmd.Flags().BoolVarP(&recursive, "recursive", "r", false, "with --force: also delete the children")
 	return cmd
 }

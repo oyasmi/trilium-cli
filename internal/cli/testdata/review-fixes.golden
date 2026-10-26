@@ -1,0 +1,54 @@
+$ trilium get meeting1 missing1 script1 -m
+---
+id: meeting1
+title: Meeting notes
+type: text (text/html)
+parents: projects1
+attrs: #status=draft ~seeAlso=script1
+children: 0
+attachments: 0
+created: 2026-10-25 16:00
+modified: 2026-10-25 16:00
+---
+
+---
+id: script1
+title: Script.py
+type: code (text/x-python)
+parents: projects1
+children: 0
+attachments: 0
+created: 2026-10-25 16:00
+modified: 2026-10-25 16:00
+---
+stderr| error: Note 'missing1' not found. [NOTE_NOT_FOUND]
+stderr| hint: find note IDs with: trilium search <words>
+exit: 3
+
+$ trilium get meeting1 script1 -c
+stderr| error: -c can't separate the content of several notes
+stderr| hint: use --json, or read one note at a time
+exit: 2
+
+$ trilium append meeting1 '- item'
+stderr| error: unknown shorthand flag: ' ' in - item
+stderr| hint: see: trilium help append. Text starting with "-" is read as a flag: put "--" before it, or use -f FILE
+exit: 2
+
+$ trilium append meeting1 -- '- item'
+appended meeting1 +6 bytes: 68 → 74 bytes
+stderr| warning: text notes store HTML; this content has no tags and will render as one paragraph. Wrap it in <p>…</p>, or create a code note (-t code) for plain text.
+
+$ trilium edit meeting1 --old x --new y --old-file '$DIR/old.txt' --new-file '$DIR/old.txt'
+stderr| error: can't mix --old/--new with --old-file/--new-file: pairs are applied in order
+stderr| hint: use either --old/--new or --old-file/--new-file in one call
+exit: 2
+
+$ trilium branch rm projects1 root --force
+stderr| error: projects1 "Projects" has 3 children; removing its last placement deletes them too
+stderr| hint: add -r to delete the whole subtree
+exit: 2
+
+$ trilium branch rm projects1 root --force -r
+deleted projects1 "Projects" (last placement; +3 children; undo: trilium undelete projects1)
+

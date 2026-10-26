@@ -496,7 +496,7 @@ trilium branch rm <note> <parent> [--force]                      # 从一个位�
 - `branch ls` 每行一条：`<branchId>\t<parentId>\t<pos>\t<prefix>`。
 - `branch add` 要做环检测（同 `mv`）。如果分支已经存在，ETAPI 会返回 200 并更新它，CLI 的输出要说明这是更新而不是新建。
 - `branch set` 修改了 `--pos` 后，自动调用 `POST /refresh-note-ordering/{parent}`。
-- `branch rm` 删的是最后一个分支时，ETAPI 会连笔记一起删除。这种情况下拒绝执行，并提示用 `rm`；确实要删时加 `--force`。
+- `branch rm` 删的是最后一个分支时，ETAPI 会连笔记一起删除。这种情况下拒绝执行，并提示用 `rm`；确实要删时加 `--force`，笔记有子节点时还要加 `-r`，结果行按 `rm` 的格式输出（`deleted … (last placement; … undo: …)`）。
 - 输出：
   ```
   cloned tA1b2C3d into xYz12345 (branch xYz12345_tA1b2C3d)
@@ -683,7 +683,7 @@ mime 以 Trilium 源码 `packages/commons/src/lib/mime_type.ts` 为准。在 `in
 | 7 | `create-note` 缺少 `content` 字段时返回 500 | 始终带上 `content`（可以是 `""`） |
 | 8 | 属性名中的空格会被静默替换成 `_` | 客户端校验名字（4.7） |
 | 9 | 搜索结果中会出现 `_hidden` 和 root | `search` 过滤掉 `_*` |
-| 10 | `ancestorNoteId` 搜索的结果包含祖先笔记本身 | `ls` 过滤掉 |
+| 10 | `ancestorNoteId` 搜索的结果包含祖先笔记本身 | `ls`、`search --in` 过滤掉 |
 | 11 | 分支 ID 是确定性的 `<parentId>_<childId>` | 用来快速定位分支，失败时退回遍历查找 |
 | 12 | 日历接口在没有日历根笔记时会自动在 root 下创建 "Calendar" | 在帮助和 skill 中说明；E2E 测试要清理 |
 | 13 | 服务器时区可能是 UTC，返回的 `dateCreated` 带的是服务器本地时区 | 显示时一律用 `utc*` 字段换算成本地时间 |
@@ -728,7 +728,8 @@ README.md, README.zh-CN.md
 
 ### 8.3 HTTP 客户端
 
-- 超时 30 秒。
+- 不设整体超时（大的 export/import 会超过 30 秒）：连接 30 秒、等待响应头 2 分钟。
+- 写请求在连接建立后失败（超时、断开）时，提示"改动可能已生效，重试前先核对"；连接没建立（dial 失败）则不提示。
 - 只对 GET 请求在网络错误、502、503、504 时重试 2 次，用指数退避。写请求不重试。
 - 错误解码：
   - 响应是 JSON `{status, code, message}` → 转成 `*etapi.Error`；
